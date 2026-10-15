@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en" id="ubg-root">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1, viewport-fit=cover" name="viewport"/>
+<meta content="#0e0f10" name="theme-color"/>
+<title id="site-tab-title">UBGForever</title>
+<link href="img/favicon.png" id="site-favicon" rel="icon"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="css/app.css" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+</head>
+<body class="landing">
+
+<!-- ============ Landing (study-site front) ============ -->
+<section aria-label="UBGForever educational landing page" id="landing">
+  <header class="edu-top">
+    <div class="edu-brand"><img alt="" src="img/logo.jpg"/><span>UBGForever</span></div>
+    <nav aria-label="Study navigation" class="edu-nav"><span>Learn</span><span>Practice</span><span>Explore</span><button class="edu-open" onclick="enterUBGMain()" type="button">open hub ↗</button></nav>
+  </header>
+  <main class="edu-page">
+    <div class="edu-kicker">A quiet place to learn, explore, and get things done</div>
+    <h1 class="edu-title">What do you want to <span class="accent">learn</span> today?</h1>
+    <p class="edu-subtitle">Search a topic, pick a subject, or use the small hub shortcut when you want to jump into UBGForever.</p>
+    <form class="edu-search" onsubmit="return false">
+      <input aria-label="Search a study topic" autocomplete="off" id="edu-search-input" placeholder="Search a topic or subject…"/>
+      <button aria-label="Search topic" onclick="eduSearch()" type="button">⌕</button>
+    </form>
+    <div class="edu-suggest"><span>Algebra</span><span>Biology</span><span>History</span><span>Writing</span><span>Computer Science</span></div>
+    <div class="edu-section-head"><h2>Explore subjects</h2><p>Start anywhere</p></div>
+    <section aria-label="Subjects" class="edu-subjects">
+      <article class="edu-subject"><div class="edu-icon">∑</div><b>Mathematics</b><small>Numbers, algebra &amp; geometry</small></article>
+      <article class="edu-subject"><div class="edu-icon">⚗</div><b>Science</b><small>Biology, chemistry &amp; physics</small></article>
+      <article class="edu-subject"><div class="edu-icon">◎</div><b>History</b><small>People, places &amp; events</small></article>
+      <article class="edu-subject"><div class="edu-icon">✎</div><b>Language Arts</b><small>Reading, writing &amp; ideas</small></article>
+    </section>
+    <div class="edu-note">Need the main hub? <strong>Use “open hub ↗” in the top-right.</strong></div>
+  </main>
+</section>
+
+<!-- ============ App shell ============ -->
+<div id="shell">
+  <header class="topbar" id="topbar">
+    <a class="brand" href="#home" aria-label="UBGForever home"><img alt="" src="img/logo.jpg"/><span>ubg<b>forever</b></span></a>
+    <nav class="topnav" id="topnav" aria-label="Main">
+      <a data-nav="home" href="#home">Home</a>
+      <a data-nav="games" href="#games">Games</a>
+      <a data-nav="apps" href="#apps">Apps</a>
+      <a data-nav="browser" href="#browser">Browser</a>
+      <a data-nav="links" href="#links">Links</a>
+    </nav>
+    <div class="top-actions">
+      <form class="top-search" id="top-search" role="search" autocomplete="off">
+        <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path d="M21 21l-4.3-4.3M10.5 18a7.5 7.5 0 110-15 7.5 7.5 0 010 15z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <input id="search-input" type="search" placeholder="Search games and apps" aria-label="Search games and apps" spellcheck="false"/>
+        <div class="suggest" id="suggest" hidden></div>
+      </form>
+      <time class="clock" id="clock" aria-label="Current time"></time>
+      <button class="icon-btn" id="btn-chat" type="button" aria-label="Community chat" title="Community chat">
+        <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 01-11.6 7.1L4 20l1-4.6A8 8 0 1121 12z"/></svg>
+      </button>
+      <div class="theme-wrap">
+        <button class="icon-btn" id="btn-theme" type="button" aria-label="Choose theme" aria-expanded="false" title="Theme"><span class="swatch" id="theme-swatch"></span></button>
+        <div class="pop" id="theme-pop" hidden></div>
+      </div>
+      <a class="icon-btn" href="#profile" aria-label="Profile" title="Profile">
+        <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0116 0"/></svg>
+      </a>
+      <a class="icon-btn" href="#settings" aria-label="Settings" title="Settings">
+        <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.9l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.9-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1.1-1.5 1.7 1.7 0 00-1.9.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.9 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1.1 1.7 1.7 0 00-.3-1.9l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.9.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.9-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.9V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/></svg>
+      </a>
+    </div>
+  </header>
+
+  <main id="app">
+
+    <!-- Home -->
+    <section class="view" id="v-home">
+      <div class="hero" id="hero">
+        <div class="hero-copy">
+          <p class="eyebrow" id="hero-eyebrow">Your hub</p>
+          <h1>What are we <em>playing</em> today?</h1>
+          <p class="hero-sub"><b id="hx-count">2,800+</b> games and <b id="hx-apps">0</b> apps in one tab. Nothing to install.</p>
+          <form class="hero-search" id="hero-form" role="search" autocomplete="off">
+            <input id="hero-input" type="search" placeholder="Try “mario”, “chess”, “notes”…" aria-label="Search games and apps" spellcheck="false"/>
+            <button type="submit">Search</button>
+          </form>
+          <div class="hero-actions">
+            <button class="btn dark" id="hero-surprise" type="button">Surprise me</button>
+            <a class="btn outline-dark" href="#games">Browse all games</a>
+          </div>
+        </div>
+        <div class="hero-art" aria-label="Random game picks">
+          <div class="collage" id="collage"></div>
+          <button class="shuffle" id="hero-shuffle" type="button">Shuffle picks</button>
+        </div>
+      </div>
+
+      <section class="block" id="blk-continue" hidden>
+        <div class="block-head"><h2>Pick up where you left off</h2></div>
+        <div class="row-track" id="continue-track"></div>
+      </section>
+
+      <section class="block">
+        <div class="block-head"><h2>Games to try</h2><a class="more" href="#games">All games →</a></div>
+        <div class="row-track" id="home-games"></div>
+      </section>
+
+      <section class="block" id="blk-trending">
+        <div class="block-head"><h2>Trending apps</h2><a class="more" href="#apps">All apps →</a></div>
+        <ol class="ranked" id="trending"></ol>
+      </section>
+    </section>
+
+    <!-- Games (built by js/games.js) -->
+    <section class="view" id="v-games" hidden></section>
+
+    <!-- Apps -->
+    <section class="view" id="v-apps" hidden>
+      <div class="page-head">
+        <div><p class="eyebrow">Library</p><h1 id="apps-title">All apps</h1></div>
+        <label class="select"><span>Sort</span>
+          <select id="sort-select" aria-label="Sort apps">
+            <option value="alphabetical">A to Z</option>
+            <option value="downloads">Most downloaded</option>
+            <option value="likes">Most liked</option>
+            <option value="newest">Newest</option>
+          </select>
+        </label>
+      </div>
+      <div class="chips" id="cat-chips" role="group" aria-label="Category"></div>
+      <div class="app-grid" id="apps-grid"></div>
+      <div class="more-wrap"><button class="btn outline" id="apps-more" type="button" hidden>Show more</button></div>
+    </section>
+
+    <!-- Search -->
+    <section class="view" id="v-search" hidden>
+      <div class="page-head"><div><p class="eyebrow">Search</p><h1 id="search-title">Results</h1></div></div>
+      <div id="search-body"></div>
+    </section>
+
+    <!-- App details -->
+    <section class="view" id="v-app" hidden>
+      <button class="back" id="app-back" type="button">← Back</button>
+      <div class="app-hero">
+        <img alt="" id="detail-app-img" src=""/>
+        <div class="app-hero-body">
+          <p class="eyebrow" id="detail-cat">App</p>
+          <h1 id="detail-app-title"></h1>
+          <p class="app-by" id="detail-by"></p>
+          <div class="hero-actions">
+            <button class="btn accent" id="detail-play" type="button">Play now</button>
+            <button class="btn outline" id="detail-download" type="button">Download</button>
+          </div>
+        </div>
+      </div>
+      <dl class="stats" id="detail-stats">
+        <div><dt>Downloads</dt><dd id="detail-stat-downloads">—</dd></div>
+        <div><dt>Size</dt><dd id="detail-stat-filesize">—</dd></div>
+        <div><dt>Category</dt><dd id="detail-stat-category">—</dd></div>
+        <div><dt>Developer</dt><dd id="detail-stat-developer">—</dd></div>
+        <div><dt>Submitted by</dt><dd id="detail-stat-submittedby">—</dd></div>
+      </dl>
+      <div class="two-col">
+        <div>
+          <h2 class="sub">About</h2>
+          <div class="desc clamp" id="detail-desc-wrapper"><div id="detail-desc-content"></div></div>
+          <button class="link-btn" id="detail-desc-btn" type="button" hidden>Read more</button>
+        </div>
+        <div>
+          <h2 class="sub">Version history</h2>
+          <div class="timeline" id="versions-timeline-container"></div>
+        </div>
+      </div>
+      <h2 class="sub">More like this</h2>
+      <div class="app-grid small" id="related-apps-grid"></div>
+    </section>
+
+    <!-- Settings -->
+    <section class="view" id="v-settings" hidden>
+      <div class="page-head"><div><p class="eyebrow">Preferences</p><h1>Settings</h1></div></div>
+      <div class="settings">
+        <section class="card">
+          <h2>Appearance</h2>
+          <p class="muted">Pick a color theme. It applies everywhere and is saved on this device.</p>
+          <div class="theme-grid" id="theme-grid"></div>
+        </section>
+        <section class="card">
+          <h2>Tab disguise</h2>
+          <p class="muted">Change the name and icon shown on this browser tab.</p>
+          <div class="icon-row" id="tab-icons"></div>
+          <div class="field-row">
+            <input class="input" id="tab-name-input" maxlength="40" placeholder="Tab name" aria-label="Tab name"/>
+            <button class="btn accent" id="tab-name-save" type="button">Save name</button>
+          </div>
+        </section>
+        <section class="card">
+          <h2>Performance</h2>
+          <label class="toggle"><input id="toggle-ram-opt" type="checkbox"/><span class="tg"></span><span><b>Free memory when closing apps</b><small>Unloads an app as soon as you leave its player.</small></span></label>
+          <label class="toggle"><input id="toggle-ult-opt" type="checkbox"/><span class="tg"></span><span><b>Ultra mode</b><small>Skips the loading screen tips for faster launches.</small></span></label>
+        </section>
+        <section class="card">
+          <h2>Time on site</h2>
+          <p class="big" id="total-playtime-counter">0m 0s</p>
+          <p class="muted">How long you have used UBGForever today.</p>
+        </section>
+        <p class="muted center">UBGForever · v2.0</p>
+      </div>
+    </section>
+
+    <!-- Links (built by js/links.js) -->
+    <section class="view" id="v-links" hidden>
+      <div class="page-head"><div><p class="eyebrow">Directory</p><h1>Links</h1><p class="muted">Pick a group to see its links. Lists load from the links folder.</p></div></div>
+      <div id="links-groups"></div>
+    </section>
+
+    <!-- Browser (built by js/browser.js) -->
+    <section class="view" id="v-browser" hidden><div id="browser-root"></div></section>
+
+    <!-- Profile (built by js/profile.js) -->
+    <section class="view" id="v-profile" hidden></section>
+  </main>
+
+  <!-- App player -->
+  <div class="player" id="v-player" hidden>
+    <header class="player-bar">
+      <button class="pbtn" id="player-exit" type="button" aria-label="Exit">← Exit</button>
+      <h2 id="player-app-title">App</h2>
+      <button class="pbtn" id="player-newtab" type="button">New tab</button>
+      <button class="pbtn" id="player-download" type="button">Download</button>
+      <button class="pbtn" id="player-full" type="button">Fullscreen</button>
+    </header>
+    <div class="player-stage" id="player-frame-container">
+      <div class="player-loader" id="player-loader-overlay"><span class="spin"></span><p id="player-loader-tip"></p></div>
+      <iframe allow="fullscreen; autoplay; clipboard-write; encrypted-media; gamepad" id="player-iframe" title="App"></iframe>
+    </div>
+  </div>
+
+  <!-- Mobile tab bar + sheet -->
+  <nav class="tabbar" id="tabbar" aria-label="Primary">
+    <a data-nav="home" href="#home"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8v9a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1z"/></svg><span>Home</span></a>
+    <a data-nav="games" href="#games"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 12h4M8 10v4"/><circle cx="15" cy="11" r=".6"/><circle cx="18" cy="13" r=".6"/><path d="M17.3 5H6.7a4 4 0 00-3.9 3.2L1.5 15a3 3 0 005.2 2.4L8 16h8l1.3 1.4A3 3 0 0022.5 15l-1.3-6.8A4 4 0 0017.3 5z"/></svg><span>Games</span></a>
+    <a data-nav="apps" href="#apps"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span>Apps</span></a>
+    <button data-open="chat" type="button"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 01-11.6 7.1L4 20l1-4.6A8 8 0 1121 12z"/></svg><span>Chat</span></button>
+    <button data-open="sheet" type="button"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/></svg><span>More</span></button>
+  </nav>
+  <div class="sheet-wrap" id="sheet" hidden>
+    <div class="sheet-back" data-close="sheet"></div>
+    <div class="sheet">
+      <div class="sheet-grip"></div>
+      <a href="#browser" data-close="sheet">Browser</a>
+      <a href="#links" data-close="sheet">Links</a>
+      <a href="#profile" data-close="sheet">Profile</a>
+      <a href="#settings" data-close="sheet">Settings</a>
+      <a href="https://discord.gg/MTUV9d4GVS" target="_blank" rel="noopener noreferrer" data-close="sheet">Discord ↗</a>
+      <div class="sheet-themes" id="sheet-themes"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Community chat (logic in js/chat.js keeps these ids) -->
+<div id="community-chat-modal" class="community-chat-modal hidden" aria-hidden="true">
+  <div class="community-chat-backdrop" onclick="closeCommunityChat()"></div>
+  <section class="community-chat-panel" role="dialog" aria-modal="true" aria-labelledby="community-chat-title">
+    <div class="community-chat-header">
+      <div>
+        <h2 id="community-chat-title">Community Chat</h2>
+        <p id="community-chat-status">Create or join a room to chat.</p>
+      </div>
+      <button class="community-chat-close" onclick="closeCommunityChat()" type="button" aria-label="Close chat">×</button>
+    </div>
+    <div id="community-chat-setup" class="community-chat-setup">
+      <label>Display name<input id="community-chat-name" maxlength="24" placeholder="Your name" autocomplete="nickname"></label>
+      <div class="community-chat-room-actions">
+        <button class="community-chat-primary" onclick="createCommunityRoom()" type="button">Create room</button>
+        <div class="community-chat-or">or</div>
+        <div class="community-chat-join-row"><input id="community-chat-room" maxlength="8" placeholder="Room code" autocomplete="off"><button class="community-chat-secondary" onclick="joinCommunityRoom()" type="button">Join</button></div>
+      </div>
+      <p class="community-chat-note">Messages are peer-to-peer and are not saved. The person who creates the room needs to stay connected for the room to remain active.</p>
+    </div>
+    <div id="community-chat-room-ui" class="community-chat-room-ui hidden">
+      <div class="community-chat-room-bar"><span>Room: <strong id="community-chat-room-code"></strong></span><button onclick="copyCommunityRoomCode()" type="button">Copy code</button></div>
+      <div id="community-chat-messages" class="community-chat-messages" aria-live="polite"></div>
+      <form class="community-chat-compose" onsubmit="sendCommunityMessage(event)">
+        <input id="community-chat-input" maxlength="500" placeholder="Type a message..." autocomplete="off">
+        <button type="submit">Send</button>
+      </form>
+      <button class="community-chat-leave" onclick="leaveCommunityRoom()" type="button">Leave room</button>
+    </div>
+  </section>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="js/storage.js"></script>
+<script src="js/core.js"></script>
+<script src="js/links-data.js"></script>
+<script src="js/links.js"></script>
+<script src="js/proxy-links.js"></script>
+<script src="js/browser.js"></script>
+<script src="js/chat.js"></script>
+<script src="js/games-data.js"></script>
+<script src="js/games.js"></script>
+<script src="js/profile.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
