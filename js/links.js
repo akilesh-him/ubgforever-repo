@@ -62,7 +62,7 @@
       if (open || body.dataset.filled) return;
       body.innerHTML = '<p class="ubg-links-msg">Loading…</p>';
       const links = await load(GROUPS[i]);
-      if (!links) { body.innerHTML = '<p class="ubg-links-msg">Couldn\u2019t load this list. Serve the folder with a local web server (or keep js/links-data.js up to date).</p>'; return; }
+      if (!links) { body.innerHTML = '<p class="ubg-links-msg">Couldn\u2019t load this collection. Try refreshing the page.</p>'; return; }
       body.dataset.filled = '1';
       body.innerHTML = '<input type="search" class="ubg-links-filter" placeholder="Filter ' + links.length + ' links…" aria-label="Filter links">' +
         '<ul class="ubg-links-list">' + links.map(u => `<li><a href="${esc(u)}" target="_blank" rel="noopener noreferrer"><span>${esc(host(u))}</span><small>${esc(u)}</small></a></li>`).join('') + '</ul>';

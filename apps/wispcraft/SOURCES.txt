@@ -1,0 +1,8 @@
+Wispcraft: https://github.com/MercuryWorkshop/wispcraft
+Patch: official continuous release latest/index.js retrieved 2026-10-25. Package license ISC.
+Base: exact IPFS CID referenced in upstream setup.sh, retrieved via Filebase gateway:
+bafybeid5iwqp3uyc4q3dqajjzbsqggqatuttqk4dnkksluqqcxaizbhjpi
+Only upstream web_wasm index.html/assets.epw/bootstrap.js/favicon.png retained.
+Patch loaded before bootstrap as upstream setup.sh specifies.
+Cover: upstream anura_template/icon.png.
+Bundled bootstrap/index line endings and trailing whitespace normalized without changing code behavior.

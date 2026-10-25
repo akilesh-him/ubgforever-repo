@@ -50,7 +50,7 @@
   const downloadRoom = async code => {
     const msgs = await getMergedHistory(code);
     if (!msgs.length) { setStatus('Nothing saved for that room yet.'); return; }
-    const text = `UBGForever chat - room ${code}\nSaved ${new Date().toLocaleString()}\n\n` + msgs.map(fmtLine).join('\n') + '\n';
+    const text = `Slipstream chat - room ${code}\nSaved ${new Date().toLocaleString()}\n\n` + msgs.map(fmtLine).join('\n') + '\n';
     const url = URL.createObjectURL(new Blob([text], { type: 'text/plain;charset=utf-8' }));
     const a = document.createElement('a');
     a.href = url; a.download = `ubg-chat-${code}.txt`;
@@ -175,7 +175,7 @@
       bar.append(dl, clr);
     }
     const note = document.querySelector('.community-chat-note');
-    if (note) note.textContent = 'Live messages go directly between browsers. When saving is on, messages are also stored in the UBGForever database under the room code, so anyone who has the code can load the room\u2019s history later. Don\u2019t share private info. The person who creates the room still needs to stay connected for it to stay live.';
+    if (note) note.textContent = 'Live messages go directly between browsers. When saving is on, messages are also stored in the site database under the room code, so anyone who has the code can load the room\u2019s history later. Don\u2019t share private info. The person who creates the room still needs to stay connected for it to stay live.';
     renderSavedList();
   }
   const cleanName = () => {

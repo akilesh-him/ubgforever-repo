@@ -41,7 +41,8 @@
     profile: function () {
       var s = state();
       return '<div class="p-grid"><div class="p-card wide"><h3>Player profile</h3>' +
-        '<label class="p-label">Name<input class="input" id="p-name" value="' + esc(s.profile.name) + '"></label>' +
+        '<label class="p-label">Name<input class="input" id="p-name" maxlength="40" value="' + esc(s.profile.name) + '"></label>' +
+        '<div class="p-picture-field"><span class="p-label">Profile picture</span><input id="p-avatar" type="file" accept="image/jpeg,image/png,image/webp" aria-label="Profile picture" aria-describedby="p-picture-status" hidden><button class="p-btn p-picture-upload" id="p-picture-choose" type="button">Choose picture</button><p class="muted" id="p-picture-status">JPG, PNG or WebP · Saved on this browser</p></div>' +
         '<label class="p-label">Bio<input class="input" id="p-bio" value="' + esc(s.profile.bio) + '"></label>' +
         '<div class="p-actions"><button class="p-btn primary" id="p-save" type="button">Save profile</button><button class="p-btn" id="p-export" type="button">Export profile</button></div></div>' +
         '<div class="p-card"><h3>Streak</h3><div class="p-stat">' + (s.profile.streak || 0) + ' days</div><p>Your local play streak.</p></div>' +
@@ -59,14 +60,14 @@
       var s = state();
       return '<div class="p-grid">' +
         '<div class="p-card"><h3>Friends</h3><input class="input" id="p-friend" placeholder="Friend name"><div class="p-actions"><button class="p-btn primary" id="p-friend-add" type="button">Add friend</button></div><div class="p-list">' + (s.friends.map(function (x) { return row(esc(x)); }).join('') || empty('Your friend list is empty.')) + '</div></div>' +
-        '<div class="p-card"><h3>Leaderboard</h3><p>Local profiles compare here once friends are added.</p><div class="p-list">' + row(esc(s.profile.name), '<b>' + s.profile.xp + ' XP</b>') + '</div></div>' +
+        '<div class="p-card"><h3>Leaderboard</h3><div class="p-actions"><button class="p-btn" id="p-leaderboard" type="button">View top ten</button></div></div>' +
         '<div class="p-card"><h3>Activity</h3><div class="p-list">' + (s.activity.slice(0, 8).map(function (x) { return row(esc(x.text), '<small>' + fmt(x.time) + '</small>'); }).join('') || empty('No activity yet.')) + '</div></div></div>';
     },
     challenges: function () {
       var s = state(), ach = achievements();
-      return '<div class="p-grid"><div class="p-card wide"><h3>Daily challenges</h3><div class="p-list">' +
-        row('Play 3 different games today', '<b>' + Math.min(uniqueToday(), 3) + '/3</b>') + row('Earn 50 XP', '<b>' + Math.min(s.profile.xp, 50) + '/50</b>') + '</div></div>' +
-        '<div class="p-card wide"><h3>Achievements</h3><div class="p-list">' + (ach.map(function (a) { return row('🏆 ' + esc(a), '<span class="p-pill">Unlocked</span>'); }).join('') || empty('Keep playing to unlock achievements.')) + '</div></div></div>';
+      return '<div class="p-grid"><div class="p-card wide"><h3>Challenges</h3><div class="p-list">' +
+        row('Play 3 different games today', '<b>' + Math.min(uniqueToday(), 3) + '/3</b>') + row('Reach 50 XP', '<b>' + Math.min(s.profile.xp, 50) + '/50</b>') + '</div></div>' +
+        window.SlipstreamLeaderboard.panel() + '<div class="p-card wide"><h3>Achievements</h3><div class="p-list">' + (ach.map(function (a) { return row(esc(a), '<span class="p-pill">Unlocked</span>'); }).join('') || empty('Keep playing to unlock achievements.')) + '</div></div></div>';
     },
     customize: function () {
       var s = state(), st = s.settings || {};
@@ -79,21 +80,45 @@
       var used = 0; try { used = JSON.stringify(localStorage).length; } catch (e) {}
       return '<div class="p-grid">' +
         '<div class="p-card"><h3>Diagnostics</h3><p>Viewport: ' + innerWidth + ' × ' + innerHeight + '</p><p>Storage: ' + (used / 1024).toFixed(1) + ' KB used on this device.</p><div class="p-actions"><button class="p-btn" id="p-diag" type="button">Run check</button></div></div>' +
-        '<div class="p-card"><h3>Performance</h3><p>Run a short rendering benchmark.</p><div class="p-actions"><button class="p-btn" id="p-perf" type="button">Run test</button></div><p id="p-perf-out"></p></div>' +
+        '<div class="p-card"><h3>Performance</h3><p>Run a short device computation check.</p><div class="p-actions"><button class="p-btn" id="p-perf" type="button">Run test</button></div><p id="p-perf-out"></p></div>' +
         '<div class="p-card"><h3>Data</h3><p>Back up or restore your local profile.</p><div class="p-actions"><button class="p-btn" id="p-data-export" type="button">Export</button><button class="p-btn" id="p-data-import" type="button">Import</button><button class="p-btn" id="p-data-reset" type="button">Reset</button></div><input type="file" id="p-data-file" accept="application/json" hidden></div>' +
         '<div class="p-card wide"><h3>Request a game</h3><input class="input" id="p-request" placeholder="Name of a game you want added"><div class="p-actions"><button class="p-btn primary" id="p-request-send" type="button">Submit request</button></div></div></div>';
     },
     updates: function () {
-      return '<div class="p-grid"><div class="p-card wide"><h3>What\u2019s new in v2</h3><div class="p-list">' +
-        row('A brand new console-style dashboard', '<span class="p-pill">New</span>') + row('Redesigned Games page with favorites and recents', '<span class="p-pill">New</span>') +
-        row('Eight themes with automatic contrast', '<span class="p-pill">New</span>') + row('Faster search across games and apps', '<span class="p-pill">New</span>') + '</div></div></div>';
+      return '<div class="p-grid"><div class="p-card wide"><h3>Slipstream</h3><div class="p-list">' +
+        row('Floating glass taskbar', '') + row('Game artwork, favorites and recents', '') +
+        row('Eight color themes', '') + row('Search across games and apps', '') + '</div></div></div>';
     }
   };
 
   function wire(el) {
     var s = state(), q = function (id) { return el.querySelector('#' + id); };
     var on = function (id, fn) { var n = q(id); if (n) n.onclick = fn; };
-    on('p-save', function () { s.profile.name = q('p-name').value.trim() || 'Player'; s.profile.bio = q('p-bio').value.trim(); store.save(); toast('Profile saved'); render(); });
+    on('p-save', function () { s.profile.name = q('p-name').value.trim() || 'Player'; s.profile.bio = q('p-bio').value.trim();  store.save(); toast('Profile saved'); render(); });
+    var upload = q('p-avatar');
+    on('p-picture-choose', function () { upload.click(); });
+    if (upload) upload.onchange = async function () {
+      var file = upload.files[0];
+      if (!file) return;
+      var button = q('p-picture-choose');
+      button.disabled = true;
+      try {
+        var pictures = await import('./profile-picture.mjs');
+        var image = await pictures.prepareProfilePicture(file);
+        if (!upload.isConnected) return;
+        s.profile.name = q('p-name').value.trim() || 'Player';
+        s.profile.bio = q('p-bio').value.trim();
+        s.profile.avatarUrl = image;
+        if (!store.save()) throw new Error('Browser storage is full or unavailable. Your picture could not be saved.');
+        toast('Profile picture updated');
+      } catch (error) {
+        toast(error.message || 'Could not load this picture');
+      } finally {
+        button.disabled = false;
+        upload.value = '';
+      }
+    };
+    on('p-leaderboard', function () { tab = 'challenges'; render(); });
     on('p-export', function () { download('ubg-profile.json', store.export(), 'application/json'); });
     el.querySelectorAll('[data-remove]').forEach(function (b) { b.onclick = function () { store.toggleFavorite(b.getAttribute('data-remove')); render(); }; });
     on('p-coll-add', function () { var v = q('p-coll').value.trim(); if (v) { store.addCollection(v); toast('Collection created'); render(); } });
@@ -105,7 +130,20 @@
     on('p-theme-export', function () { download('ubg-settings.json', JSON.stringify(s.settings, null, 2), 'application/json'); });
     on('p-theme-import', function () { q('p-theme-file').click(); });
     var tf = q('p-theme-file'); if (tf) tf.onchange = function (e) { var f = e.target.files[0]; if (!f) return; var r = new FileReader(); r.onload = function () { try { s.settings = Object.assign(s.settings, JSON.parse(r.result)); store.save(); applySettings(); render(); toast('Settings imported'); } catch (_) { toast('Invalid settings file'); } }; r.readAsText(f); };
-    on('p-diag', function () { toast('Diagnostics passed: core browser features available'); });
+    on('p-diag', function () {
+      var unavailable = [];
+      if (!navigator.serviceWorker) unavailable.push('Browser needs localhost or HTTPS');
+      if (typeof WebSocket === 'undefined') unavailable.push('WebSocket is unavailable');
+      try {
+        var key = 'slipstream-storage-check';
+        localStorage.setItem(key, 'ready');
+        if (localStorage.getItem(key) !== 'ready') unavailable.push('Storage is unavailable');
+        localStorage.removeItem(key);
+      } catch (error) {
+        unavailable.push('Storage is unavailable');
+      }
+      toast(unavailable.length ? unavailable.join('. ') : 'Browser and device storage are available');
+    });
     on('p-perf', function () { var t0 = performance.now(), n = 0; for (var i = 0; i < 300000; i++) n += Math.sqrt(i); q('p-perf-out').textContent = 'Benchmark: ' + (performance.now() - t0).toFixed(1) + ' ms'; });
     on('p-data-export', function () { download('ubgforever-data.json', store.export(), 'application/json'); });
     on('p-data-import', function () { q('p-data-file').click(); });
@@ -117,12 +155,38 @@
   function render() {
     root = root || document.getElementById('v-profile'); if (!root) return;
     var s = state(), xp = s.profile.xp || 0, lvl = s.profile.level || 1;
+    var avatar = /^(https:\/\/|data:image\/(webp|png|jpeg);base64,)/i.test(s.profile.avatarUrl || '')
+      ? '<img src="' + esc(s.profile.avatarUrl) + '" alt="" referrerpolicy="no-referrer">'
+      : esc((s.profile.name || 'P').charAt(0).toUpperCase());
     root.innerHTML =
-      '<div class="p-hero"><div class="p-avatar">' + esc((s.profile.name || 'P').charAt(0).toUpperCase()) + '</div><div><p class="eyebrow">Level ' + lvl + '</p><h1>' + esc(s.profile.name) + '</h1><p class="muted">' + esc(s.profile.bio || '') + '</p><div class="p-meter"><i style="width:' + ((xp % 250) / 250 * 100) + '%"></i></div></div></div>' +
-      '<div class="p-tabs" role="tablist">' + TABS.map(function (t) { var k = t.toLowerCase(); return '<button type="button" role="tab" class="p-tab' + (k === tab ? ' on' : '') + '" data-tab="' + k + '">' + t + '</button>'; }).join('') + '</div>' +
-      '<div id="p-panel">' + panels[tab]() + '</div>';
-    root.querySelectorAll('.p-tab').forEach(function (b) { b.onclick = function () { tab = b.getAttribute('data-tab'); render(); }; });
-    wire(root.querySelector('#p-panel'));
+      '<div class="p-hero"><div class="p-avatar">' + avatar + '</div><div><p class="eyebrow">Level ' + lvl + '</p><h1>' + esc(s.profile.name) + '</h1><p class="muted">' + esc(s.profile.bio === 'Ready to play.' ? '' : (s.profile.bio || '')) + '</p><div class="p-meter"><i style="width:' + ((xp % 250) / 250 * 100) + '%"></i></div></div></div>' +
+      '<div class="p-tabs" role="tablist">' + TABS.map(function (t) { var k = t.toLowerCase(); return '<button type="button" role="tab" id="p-tab-' + k + '" aria-controls="p-panel" tabindex="' + (k === tab ? 0 : -1) + '" aria-selected="' + (k === tab) + '" class="p-tab' + (k === tab ? ' on' : '') + '" data-tab="' + k + '">' + t + '</button>'; }).join('') + '</div>' +
+      '<div id="p-panel" role="tabpanel" aria-labelledby="p-tab-' + tab + '">' + panels[tab]() + '</div>';
+    root.querySelectorAll('.p-tab').forEach(function (button, index) {
+      button.onclick = function () {
+        tab = button.getAttribute('data-tab');
+        render();
+        root.querySelector('.p-tab[aria-selected="true"]').focus();
+      };
+      button.onkeydown = function (event) {
+        var next;
+        if (event.key === 'ArrowRight') next = (index + 1) % TABS.length;
+        if (event.key === 'ArrowLeft') next = (index + TABS.length - 1) % TABS.length;
+        if (event.key === 'Home') next = 0;
+        if (event.key === 'End') next = TABS.length - 1;
+        if (next === undefined) return;
+        event.preventDefault();
+        tab = TABS[next].toLowerCase();
+        render();
+        root.querySelector('.p-tab[aria-selected="true"]').focus();
+      };
+    });
+    var panel = root.querySelector('#p-panel');
+    wire(panel);
+    if (!matchMedia('(prefers-reduced-motion: reduce)').matches && !document.body.classList.contains('effects-reduced') && !document.documentElement.classList.contains('reduce-motion')) {
+      panel.animate([{ opacity: .5, transform: 'translateY(5px)' }, { opacity: 1, transform: 'translateY(0)' }], { duration: 220, easing: 'ease-out' });
+    }
+    if (tab === 'challenges') window.SlipstreamLeaderboard.mount();
     window.dispatchEvent(new CustomEvent('ubgtheme-refresh'));
   }
 

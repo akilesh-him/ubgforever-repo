@@ -4,56 +4,70 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1, viewport-fit=cover" name="viewport"/>
 <meta content="#0e0f10" name="theme-color"/>
-<title id="site-tab-title">UBGForever</title>
-<link href="img/favicon.png" id="site-favicon" rel="icon"/>
+<title id="site-tab-title">Slipstream</title>
+<link href="img/slipstream.png" id="site-favicon" rel="icon"/>
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
 <link href="css/app.css" rel="stylesheet"/>
+<link href="css/slipstream.css" rel="stylesheet"/>
+<link href="css/entrance.css" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 </head>
 <body class="landing">
+<svg width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute;pointer-events:none"><defs><filter id="dock-lens" x="-10%" y="-30%" width="120%" height="160%" color-interpolation-filters="sRGB"><feGaussianBlur in="SourceGraphic" stdDeviation="2" result="soft"/><feTurbulence type="fractalNoise" baseFrequency="0.004 0.025" numOctaves="1" seed="2" result="map"/><feDisplacementMap in="soft" in2="map" scale="18" xChannelSelector="R" yChannelSelector="G"/></filter></defs></svg>
 
-<!-- ============ Landing (study-site front) ============ -->
-<section aria-label="UBGForever educational landing page" id="landing">
-  <header class="edu-top">
-    <div class="edu-brand"><img alt="" src="img/logo.jpg"/><span>UBGForever</span></div>
-    <nav aria-label="Study navigation" class="edu-nav"><span>Learn</span><span>Practice</span><span>Explore</span><button class="edu-open" onclick="enterUBGMain()" type="button">open hub ↗</button></nav>
-  </header>
-  <main class="edu-page">
-    <div class="edu-kicker">A quiet place to learn, explore, and get things done</div>
-    <h1 class="edu-title">What do you want to <span class="accent">learn</span> today?</h1>
-    <p class="edu-subtitle">Search a topic, pick a subject, or use the small hub shortcut when you want to jump into UBGForever.</p>
-    <form class="edu-search" onsubmit="return false">
-      <input aria-label="Search a study topic" autocomplete="off" id="edu-search-input" placeholder="Search a topic or subject…"/>
-      <button aria-label="Search topic" onclick="eduSearch()" type="button">⌕</button>
+
+
+<section aria-label="University opening screen" id="landing">
+  <header class="entrance-header">
+    <a class="entrance-brand" href="https://www.harvard.edu/" aria-label="Harvard University"><img src="img/landing/harvard-logo.svg" alt="Harvard University" width="200" height="50"/></a>
+    <a class="entrance-notice" href="https://www.harvard.edu/federal-lawsuits/"><span aria-hidden="true"></span>Learn about our lawsuits to protect our students and researchers</a>
+    <div class="entrance-actions">
+      <button id="entrance-search-toggle" type="button" aria-expanded="false" aria-controls="entrance-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="10" cy="10" r="7"/><path d="m15 15 7 7"/></svg><span>Search</span></button>
+      <button id="entrance-menu" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M2 7h20M2 17h20"/></svg><span>Menu</span></button>
+    </div>
+    <form id="entrance-search" action="https://www.harvard.edu/search/" method="get" role="search" hidden>
+      <label class="sr-only" for="entrance-query">Search Harvard</label>
+      <input id="entrance-query" name="q_as" type="search" placeholder="Search Harvard" required/>
+      <button type="submit">Search</button>
     </form>
-    <div class="edu-suggest"><span>Algebra</span><span>Biology</span><span>History</span><span>Writing</span><span>Computer Science</span></div>
-    <div class="edu-section-head"><h2>Explore subjects</h2><p>Start anywhere</p></div>
-    <section aria-label="Subjects" class="edu-subjects">
-      <article class="edu-subject"><div class="edu-icon">∑</div><b>Mathematics</b><small>Numbers, algebra &amp; geometry</small></article>
-      <article class="edu-subject"><div class="edu-icon">⚗</div><b>Science</b><small>Biology, chemistry &amp; physics</small></article>
-      <article class="edu-subject"><div class="edu-icon">◎</div><b>History</b><small>People, places &amp; events</small></article>
-      <article class="edu-subject"><div class="edu-icon">✎</div><b>Language Arts</b><small>Reading, writing &amp; ideas</small></article>
+  </header>
+  <main>
+    <section class="entrance-hero" aria-labelledby="entrance-title">
+      <video id="entrance-globe" autoplay muted loop playsinline preload="none" poster="img/landing/globe.webp" aria-hidden="true"><source data-src="img/landing/globe.webm" type="video/webm"/></video>
+      <div class="entrance-shade"></div>
+      <div class="entrance-copy">
+        <h1 id="entrance-title">Harvard in the World</h1>
+        <p>Our community is working across all seven continents to build a better future<br class="entrance-wide-break"/> through research, technology, and scholarship.</p>
+        <a class="entrance-cta" href="https://worldwide.harvard.edu/events/worldwide-week-harvard-home/"><span aria-hidden="true">→</span>Learn about Worldwide Week</a>
+      </div>
+      <button id="entrance-motion" type="button" aria-label="Pause background video" hidden><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 6h4v12H7zm6 0h4v12h-4z"/></svg></button>
     </section>
-    <div class="edu-note">Need the main hub? <strong>Use “open hub ↗” in the top-right.</strong></div>
+    <section class="entrance-community">
+      <h2>Our global community</h2>
+      <div><p class="entrance-stat">20+ locations abroad</p><a href="https://www.harvard.edu/about/harvard-in-the-world/">Explore Harvard around the world <span aria-hidden="true">→</span></a></div>
+    </section>
   </main>
 </section>
 
 <!-- ============ App shell ============ -->
-<div id="shell">
-  <header class="topbar" id="topbar">
-    <a class="brand" href="#home" aria-label="UBGForever home"><img alt="" src="img/logo.jpg"/><span>ubg<b>forever</b></span></a>
+<div id="shell" inert>
+  <header class="topbar" id="topbar" aria-label="Taskbar">
+    <a class="brand" href="#home" aria-label="Slipstream home"><img alt="" src="img/slipstream.png"/><span>Slipstream</span></a>
     <nav class="topnav" id="topnav" aria-label="Main">
       <a data-nav="home" href="#home">Home</a>
       <a data-nav="games" href="#games">Games</a>
       <a data-nav="apps" href="#apps">Apps</a>
       <a data-nav="browser" href="#browser">Browser</a>
       <a data-nav="links" href="#links">Links</a>
+      <a data-nav="ai" href="#ai" class="ai-nav">AI <span class="nav-new">↗</span></a>
     </nav>
+
     <div class="top-actions">
-      <form class="top-search" id="top-search" role="search" autocomplete="off">
+      <button class="icon-btn" id="dock-search" aria-label="Search games and apps" aria-expanded="false" type="button"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="10.5" cy="10.5" r="7"/><path d="m16 16 5 5"/></svg></button>
+      <form class="top-search" id="top-search" role="search" autocomplete="off" hidden>
         <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path d="M21 21l-4.3-4.3M10.5 18a7.5 7.5 0 110-15 7.5 7.5 0 010 15z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
         <input id="search-input" type="search" placeholder="Search games and apps" aria-label="Search games and apps" spellcheck="false"/>
         <div class="suggest" id="suggest" hidden></div>
@@ -73,6 +87,7 @@
         <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.9l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.9-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1.1-1.5 1.7 1.7 0 00-1.9.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.9 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1.1 1.7 1.7 0 00-.3-1.9l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.9.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.9-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.9V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/></svg>
       </a>
     </div>
+    <button class="dock-mobile-settings" data-open="sheet" aria-label="More" type="button">•••</button>
   </header>
 
   <main id="app">
@@ -81,9 +96,9 @@
     <section class="view" id="v-home">
       <div class="hero" id="hero">
         <div class="hero-copy">
-          <p class="eyebrow" id="hero-eyebrow">Your hub</p>
-          <h1>What are we <em>playing</em> today?</h1>
-          <p class="hero-sub"><b id="hx-count">2,800+</b> games and <b id="hx-apps">0</b> apps in one tab. Nothing to install.</p>
+          <p class="eyebrow" id="hero-eyebrow"></p>
+          <div class="hero-identity"><img class="hero-logo" src="img/slipstream.png" alt="Slipstream logo" width="180" height="180"/><h1>Slipstream</h1></div>
+          <p class="hero-sub"><b id="hx-count">2,800+</b> games · <b id="hx-apps">0</b> apps</p>
           <form class="hero-search" id="hero-form" role="search" autocomplete="off">
             <input id="hero-input" type="search" placeholder="Try “mario”, “chess”, “notes”…" aria-label="Search games and apps" spellcheck="false"/>
             <button type="submit">Search</button>
@@ -100,17 +115,17 @@
       </div>
 
       <section class="block" id="blk-continue" hidden>
-        <div class="block-head"><h2>Pick up where you left off</h2></div>
+        <div class="block-head"><h2>Recently played</h2></div>
         <div class="row-track" id="continue-track"></div>
       </section>
 
       <section class="block">
-        <div class="block-head"><h2>Games to try</h2><a class="more" href="#games">All games →</a></div>
+        <div class="block-head"><h2>Featured games</h2><a class="more" href="#games">All games →</a></div>
         <div class="row-track" id="home-games"></div>
       </section>
 
       <section class="block" id="blk-trending">
-        <div class="block-head"><h2>Trending apps</h2><a class="more" href="#apps">All apps →</a></div>
+        <div class="block-head"><h2>Your web apps</h2><a class="more" href="#apps">All apps →</a></div>
         <ol class="ranked" id="trending"></ol>
       </section>
     </section>
@@ -200,26 +215,32 @@
         <section class="card">
           <h2>Performance</h2>
           <label class="toggle"><input id="toggle-ram-opt" type="checkbox"/><span class="tg"></span><span><b>Free memory when closing apps</b><small>Unloads an app as soon as you leave its player.</small></span></label>
-          <label class="toggle"><input id="toggle-ult-opt" type="checkbox"/><span class="tg"></span><span><b>Ultra mode</b><small>Skips the loading screen tips for faster launches.</small></span></label>
+          <label class="toggle"><input id="toggle-ult-opt" type="checkbox"/><span class="tg"></span><span><b>Hide loading text</b><small>Keep app loading screens minimal.</small></span></label>
+          <label class="toggle"><input id="toggle-effects" type="checkbox"/><span class="tg"></span><span><b>Reduce effects</b><small>Pause animated tiles and simplify glass.</small></span></label>
         </section>
         <section class="card">
           <h2>Time on site</h2>
           <p class="big" id="total-playtime-counter">0m 0s</p>
-          <p class="muted">How long you have used UBGForever today.</p>
+          <p class="muted">Total time spent on Slipstream on this device.</p>
         </section>
-        <p class="muted center">UBGForever · v2.0</p>
+        <p class="muted center">Slipstream · v2.0</p>
       </div>
     </section>
 
     <!-- Links (built by js/links.js) -->
     <section class="view" id="v-links" hidden>
-      <div class="page-head"><div><p class="eyebrow">Directory</p><h1>Links</h1><p class="muted">Pick a group to see its links. Lists load from the links folder.</p></div></div>
+      <div class="page-head"><div><p class="eyebrow">Directory</p><h1>Links</h1><p class="muted">Browse saved link collections.</p></div></div>
       <div id="links-groups"></div>
     </section>
 
     <!-- Browser (built by js/browser.js) -->
     <section class="view" id="v-browser" hidden><div id="browser-root"></div></section>
 
+    <section class="view" id="v-ai" hidden>
+      <div class="page-head ai-page-head"><button class="btn outline" id="ai-clear" type="button">New chat</button></div>
+      <div class="ai-workspace"><div class="ai-conversation" id="ai-messages" role="log" aria-live="polite"><div class="ai-welcome"><img src="img/slipstream.png" width="64" height="64" alt=""/><h2>Start a conversation</h2></div></div>
+      <form class="ai-compose" id="ai-form"><label class="sr-only" for="ai-input">Message Slipstream AI</label><textarea id="ai-input" rows="1" maxlength="12000" placeholder="Message…" required></textarea><div id="ai-files" aria-live="polite"></div><div class="ai-compose-actions"><button type="button" id="ai-attach" class="ai-attach" aria-label="Attach files" title="Attach images or text files">Attach file</button><input id="ai-file-input" type="file" multiple hidden><button class="btn accent" id="ai-send" type="submit" aria-label="Send message">↑</button></div></form><p class="ai-note">AI can make mistakes. Check important information. Messages are sent to OpenRouter.</p></div>
+    </section>
     <!-- Profile (built by js/profile.js) -->
     <section class="view" id="v-profile" hidden></section>
   </main>
@@ -227,11 +248,13 @@
   <!-- App player -->
   <div class="player" id="v-player" hidden>
     <header class="player-bar">
-      <button class="pbtn" id="player-exit" type="button" aria-label="Exit">← Exit</button>
+      <button class="pbtn" id="player-exit" type="button" aria-label="Close app">× Close</button>
       <h2 id="player-app-title">App</h2>
-      <button class="pbtn" id="player-newtab" type="button">New tab</button>
-      <button class="pbtn" id="player-download" type="button">Download</button>
-      <button class="pbtn" id="player-full" type="button">Fullscreen</button>
+      <button class="pbtn" id="player-back" type="button" aria-label="Back" disabled>←</button>
+      <button class="pbtn" id="player-forward" type="button" aria-label="Forward" disabled>→</button>
+
+
+
     </header>
     <div class="player-stage" id="player-frame-container">
       <div class="player-loader" id="player-loader-overlay"><span class="spin"></span><p id="player-loader-tip"></p></div>
@@ -249,11 +272,13 @@
   </nav>
   <div class="sheet-wrap" id="sheet" hidden>
     <div class="sheet-back" data-close="sheet"></div>
-    <div class="sheet">
+    <div class="sheet" role="dialog" aria-modal="true" aria-label="More options">
       <div class="sheet-grip"></div>
+      <a href="#ai" data-close="sheet">AI assistant</a>
       <a href="#browser" data-close="sheet">Browser</a>
       <a href="#links" data-close="sheet">Links</a>
       <a href="#profile" data-close="sheet">Profile</a>
+      <button data-open="chat" data-close="sheet" type="button">Community chat</button>
       <a href="#settings" data-close="sheet">Settings</a>
       <a href="https://discord.gg/MTUV9d4GVS" target="_blank" rel="noopener noreferrer" data-close="sheet">Discord ↗</a>
       <div class="sheet-themes" id="sheet-themes"></div>
@@ -296,14 +321,23 @@
 
 <script src="js/storage.js"></script>
 <script src="js/core.js"></script>
+<script src="js/entrance.js"></script>
 <script src="js/links-data.js"></script>
 <script src="js/links.js"></script>
-<script src="js/proxy-links.js"></script>
+<script src="js/proxy-runtime.js"></script>
+<script src="js/frame-history.js"></script>
+<script src="js/app-player.js"></script>
 <script src="js/browser.js"></script>
+<script type="module" src="js/ai.js"></script>
 <script src="js/chat.js"></script>
 <script src="js/games-data.js"></script>
+<script src="js/game-art.js"></script>
 <script src="js/games.js"></script>
+<script src="js/leaderboard.js"></script>
 <script src="js/profile.js"></script>
+<script src="js/web-apps.js"></script>
 <script src="js/app.js"></script>
+<script type="module" src="js/taskbar.js"></script>
+<script src="js/overlay-controls.js"></script>
 </body>
 </html>

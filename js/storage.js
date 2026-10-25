@@ -15,7 +15,7 @@
   function clone(v){ return JSON.parse(JSON.stringify(v)); }
   function load(){ try { const raw=localStorage.getItem(KEY); return raw ? Object.assign(clone(defaults), JSON.parse(raw)) : clone(defaults); } catch(e){ return clone(defaults); } }
   let state=load();
-  function save(){ try { localStorage.setItem(KEY, JSON.stringify(state)); } catch(e){}; window.dispatchEvent(new CustomEvent('ubgstatechange',{detail:state})); }
+  function save(){ let saved = true; try { localStorage.setItem(KEY, JSON.stringify(state)); } catch(e){ saved = false; } window.dispatchEvent(new CustomEvent('ubgstatechange',{detail:state})); return saved; }
   window.UBGStore={
     get(){ return state; }, save,
     reset(){ state=clone(defaults); save(); return state; },

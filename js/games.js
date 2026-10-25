@@ -24,36 +24,37 @@
     return s.charAt(0).toUpperCase() + s.slice(1);
   }
   function makeGame(id) {
-    var name = (window.UBG_GAME_TITLES && window.UBG_GAME_TITLES[id]) || prettify(id);
+    var name = id === 'wispcraft' ? 'Wispcraft' : (window.UBG_GAME_TITLES && window.UBG_GAME_TITLES[id]) || prettify(id);
     var c = name.charAt(0).toUpperCase();
     return { id: id, name: name, search: (name + ' ' + id.replace(/^cl/i, '')).toLowerCase(), letter: /[A-Z]/.test(c) ? c : '#' };
   }
   function setGames(ids) {
-    all = ids.map(makeGame).sort(function (a, b) { return a.name.localeCompare(b.name, 'en', { sensitivity: 'base', numeric: true }); });
+    ids = ids.filter(function (id) { return id !== 'wispcraft'; }).concat('wispcraft');
+    all = ids.filter(function (id) { return id.toLowerCase() !== 'clai'; }).map(makeGame).sort(function (a, b) { var art = window.SlipstreamGameArt || {};
+      return Number(Boolean(art[b.id])) - Number(Boolean(art[a.id])) ||
+        a.name.localeCompare(b.name, 'en', { sensitivity: 'base', numeric: true }); });
     byId = {}; all.forEach(function (g) { byId[g.id] = g; });
   }
 
   /* ---------- cover art ---------- */
-  var COLORS = ['#107c10', '#0078d4', '#e81123', '#ffb900', '#8661c5', '#00b294', '#ff8c00', '#e3008c', '#2d7d9a', '#c239b3'];
-  function hash(s) { var h = 5381; for (var i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0; return Math.abs(h); }
-  function mono(name) {
-    var c = name.replace(/[^A-Za-z0-9 ]/g, '').trim();
-    if (!c) return '?';
-    var w = c.split(' ');
-    if (w.length > 1) return (w[0].charAt(0) + w[1].charAt(0)).toUpperCase();
-    return c.charAt(0).toUpperCase() + c.charAt(1).toLowerCase();
-  }
   function coverHtml(g) {
-    var h = hash(g.id);
-    return '<span class="cover gp' + ((h >> 3) % 6) + '" style="--cv:' + COLORS[h % COLORS.length] + ';--h:' + (h % 360) + '"><span class="mono">' + esc(mono(g.name)) + '</span><img class="cover-img" src="game-pictures/' + encodeURIComponent(g.id) + '.jpg" alt="" loading="lazy" onerror="this.remove()"></span>';
+    var art = (window.SlipstreamGameArt || {})[g.id];
+    return '<span class="cover"><span class="mono" aria-hidden="true">' + esc(g.name.replace(/[^a-z0-9]/gi, '').slice(0, 2).toUpperCase()) + '</span>' + (art ? '<img class="cover-img" src="' + esc(art) + '" alt="" loading="lazy" decoding="async" onerror="this.remove()">' : '') + '</span>';
   }
+
   var STAR = function (on) { return '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.9L12 16.9 6.8 19.7l1-5.9L3.5 9.7l5.9-.8z" fill="' + (on ? 'currentColor' : 'none') + '" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>'; };
   function tileHtml(g, opts) {
     opts = opts || {};
     var on = favs.indexOf(g.id) !== -1;
-    return '<div class="tile" role="button" tabindex="0" data-game-id="' + esc(g.id) + '" data-game-name="' + esc(g.name) + '">' + coverHtml(g) +
-      (opts.noFav ? '' : '<button type="button" class="fav' + (on ? ' on' : '') + '" aria-pressed="' + on + '" aria-label="' + (on ? 'Remove from' : 'Add to') + ' favorites">' + STAR(on) + '</button>') +
-      '<span class="tile-name">' + esc(g.name) + '</span></div>';
+    var attributes = ' data-game-id="' + esc(g.id) + '" data-game-name="' + esc(g.name) + '"';
+    var content = coverHtml(g) + '<span class="tile-name">' + esc(g.name) + '</span>';
+    if (opts.noFav) {
+      return '<div class="tile" role="button" tabindex="0"' + attributes + '>' + content + '</div>';
+    }
+    return '<div class="tile"' + attributes + '>' +
+      '<button class="tile-launch" type="button" aria-label="Play ' + esc(g.name) + '">' + content + '</button>' +
+      '<button type="button" class="fav' + (on ? ' on' : '') + '" aria-pressed="' + on +
+      '" aria-label="' + (on ? 'Remove from' : 'Add to') + ' favorites">' + STAR(on) + '</button></div>';
   }
 
   /* ---------- public helpers ---------- */
@@ -82,7 +83,7 @@
     writeList(FAV_KEY, favs);
     var on = favs.indexOf(id) !== -1;
     document.querySelectorAll('.tile[data-game-id="' + cssEsc(id) + '"] .fav').forEach(function (b) {
-      b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); b.innerHTML = STAR(on);
+      b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); b.setAttribute('aria-label', on ? 'Remove from favorites' : 'Add to favorites'); b.innerHTML = STAR(on);
     });
     var pf = document.getElementById('game-fav'); if (pf && activeId === id) pf.classList.toggle('on', on);
     renderShelves();
@@ -199,7 +200,7 @@
     el.querySelector('#game-reload').onclick = function () { if (activeId) play(activeId, true); };
     el.querySelector('#game-fav').onclick = function () { if (activeId) toggleFav(activeId); };
     el.querySelector('#game-full').onclick = function () { var f = el.querySelector('#game-frame'); (f.requestFullscreen || f.webkitRequestFullscreen || function () {}).call(f); };
-    el.querySelector('#game-newtab').onclick = function () { if (activeBlob) window.open(activeBlob, '_blank'); };
+    el.querySelector('#game-newtab').onclick = function () { if (activeId === 'wispcraft') window.open(wispcraftUrl(), '_blank'); else if (activeBlob) window.open(activeBlob, '_blank'); };
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !el.hidden && !document.fullscreenElement) closeGame(); });
     return el;
   }
@@ -212,6 +213,7 @@
     activeId = null;
   }
   function fetchText(u) { return fetch(u).then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); }); }
+  function wispcraftUrl() { return '/apps/wispcraft/index.html?wisp=' + encodeURIComponent((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/wisp/'); }
   function play(id, isReload) {
     if (!id) return;
     var g = byId[id] || makeGame(id), el = ensurePlayer(), frame = el.querySelector('#game-frame'), file = encodeURIComponent(id + '.html');
@@ -225,6 +227,12 @@
       pushRecent(id);
       if (window.UBGStore) { window.UBGStore.addHistory(g.name); window.UBGStore.addActivity('Played ' + g.name); }
     }
+    if (id === 'wispcraft') {
+      frame.onload = function () { if (activeId === id) { frame.style.visibility = 'visible'; status(''); } };
+      frame.src = wispcraftUrl();
+      return;
+    }
+    frame.onload = null;
     fetchText(CDN + file).catch(function () { return fetchText(RAW + file); }).then(function (html) {
       if (activeId !== id) return;
       if (activeBlob) URL.revokeObjectURL(activeBlob);
@@ -257,7 +265,11 @@
   loadSnapshot();
   document.addEventListener('DOMContentLoaded', function () { mount(); });
   refreshLive();
-  window.UBGGames = { play: play, close: closeGame, surprise: surprise, search: search, countMatches: countMatches, pick: pick, recent: recentGames,
+  window.UBGGames = { play: play, close: closeGame, surprise: surprise, search: search, countMatches: countMatches, pick: pick, featured: function (n) {
+      var ids = ['clsubwaysurf' , 'cldrivemad', 'clretrobowl', 'clslope', 'cl1v1lol', 'clminecraft', 'clgeometrydash', 'clbitlife', 'clbasketballstars', 'cltunnelrush', 'clcookieclicker', 'clrun3', 'cl2048', 'cl3dash'];
+      var selected = ids.map(function (id) { return byId[id]; }).filter(function (g) { return g && (window.SlipstreamGameArt || {})[g.id]; });
+      return selected.concat(all.filter(function (g) { return (window.SlipstreamGameArt || {})[g.id] && !ids.includes(g.id); })).slice(0, n || 14);
+    }, recent: recentGames,
     favorites: function () { return favs.map(function (id) { return byId[id]; }).filter(Boolean); },
     tileHtml: tileHtml, coverHtml: coverHtml, openWith: openWith, total: function () { return all.length; }, refresh: refreshLive };
 })();

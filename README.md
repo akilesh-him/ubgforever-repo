@@ -1,24 +1,44 @@
-# UBGForever v2
+# Slipstream
 
-A console-style dashboard for games and apps. Static site, no build step.
+A games, web apps and proxied browsing portal, based on UBGForever. The original game provider, favorites, recents and profile data remain compatible.
 
-## Structure
+## Local development
 
-- `index.html`: markup for the study-site front page, the hub shell and every view
-- `css/app.css`: the whole design system (themes are CSS variables set by `js/core.js`)
-- `js/core.js`: helpers, themes, tab disguise, backend client
-- `js/app.js`: routing, home, apps, search, app pages, player, settings
-- `js/games.js` + `js/games-data.js`: 2,800+ games from `bubbls/ugs-singlefile`, favorites, recents, player
-- `js/profile.js`: level, library, friends, challenges, customization, tools
-- `js/links.js`, `js/proxy-links.js` (add Rammerhead links here), `js/browser.js`, `js/chat.js`, `js/storage.js`: links directory, proxy browser, peer-to-peer chat, local profile storage
-- `links/`, `build-links.js`: link lists and the script that bundles them into `js/links-data.js`
-- `supabase-*.sql`: database setup
+Requires Node 22.
 
-## Routes
+```sh
+npm install
+cp .env.example .env
+npm start
+```
 
-`#home`, `#games`, `#games/<search>`, `#apps`, `#category/<name>`, `#app/<id>`, `#play/<id>`, `#search/<text>`, `#settings`, `#links`, `#browser`, `#profile`
+Open http://localhost:5186/. Set the server-only `OPENROUTER_API_KEY` in `.env` to enable AI. Keep `.env` private. The frontend contains no OpenRouter key.
 
-## Games
+```sh
+npm test
+npm run build
+```
 
-The game list ships as a snapshot (`js/games-data.js`) and refreshes from jsDelivr when reachable.
-Games load on demand from the jsDelivr CDN, falling back to raw.githubusercontent.com.
+The build checks JavaScript syntax and copies public assets to `dist/`. AI and Wisp require the Node server. A static upload alone is insufficient.
+
+## Contributing
+
+Read [the development guide](docs/DEVELOPING.md) for module ownership, app/game extension recipes, styling and behavioral tests.
+
+The frontend uses plain JavaScript. Each new lifecycle has a specific owner rather than being spread across the original router. Partner styling lives in `css/slipstream.css`, layered over the original `css/app.css`. The opening screen is separate.
+
+## Features and services
+
+- Original games catalog with local cover mappings and a local Wispcraft client.
+- Curated apps in independent app-style windows, plus a local HTML editor.
+- Scramjet and BareMux/Epoxy through `/wisp/`, with Startpage search.
+- OpenRouter `dots-studio/dots-3-note-preview:free`, image/text attachments, Wikipedia and web search.
+- Device-local profile and history, existing community chat, optional opt-in top-ten leaderboard.
+
+Leaderboard SQL is in `supabase-leaderboard.sql`. It is supplied for manual application to the partner project. Browser-local XP is not authenticated competitive scoring, and local profile uploads are not public avatar hosting. Third-party sign-in, streaming and DRM depend on the service.
+
+## Attribution
+
+Game cover provenance is recorded in `tools/artwork-sources.json`. App logo sources are in `img/apps/SOURCES.md`. Wispcraft and its base client are documented in `apps/wispcraft/SOURCES.txt`. Opening assets are documented in `img/landing/SOURCES.txt`.
+
+Local preview work is authorized. Push, merge, deployment and database migrations still require the user's explicit go.

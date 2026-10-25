@@ -2,17 +2,18 @@
 (function () {
   'use strict';
   var U = window.UBGUI, $ = U.$, $$ = U.$$, esc = U.escapeHtml, G = function () { return window.UBGGames; };
-  var apps = [], sorted = [], category = 'all', sortKey = 'alphabetical', shown = 24, current = null, appsLoaded = false;
-  var TIPS = ['Getting your proxy ready', 'Did you know UBGForever includes a dedicated Game Stash', 'Why is this taking for ever🙄', 'Guys i spend hundreds of dollars on keeping my site up and running ', 'I just farted ', 'Axel Sucks at games ', 'I HATE AI', 'UBGForever is your custom app hub', 'Getting your proxy ready'];
+  var apps = (window.SlipstreamApps || []).slice(), sorted = [], category = 'all', sortKey = 'alphabetical', shown = 24, current = null, appsLoaded = false;
   var LEGACY = { 'home-page-view': 'v-home', 'search-page-view': 'v-search', 'app-details-view': 'v-app', 'app-player-view': 'v-player', 'browser-page-view': 'v-browser', 'game-vault-view': 'v-games', 'links-page-view': 'v-links', 'settings-page-view': 'v-settings' };
-  var NAV = { 'v-home': 'home', 'v-games': 'games', 'v-apps': 'apps', 'v-app': 'apps', 'v-search': '', 'v-browser': 'browser', 'v-links': 'links', 'v-settings': '', 'v-profile': '' };
+  var NAV = { 'v-home': 'home', 'v-games': 'games', 'v-apps': 'apps', 'v-app': 'apps', 'v-search': '', 'v-browser': 'browser', 'v-links': 'links', 'v-settings': '', 'v-profile': '', 'v-ai': 'ai' };
 
   /* ---------- views ---------- */
   function showView(id) {
     id = LEGACY[id] || id;
     if (id === 'v-player') { $('#v-player').hidden = false; document.body.style.overflow = 'hidden'; return; }
     $('#v-player').hidden = true; document.body.style.overflow = '';
+    document.body.classList.toggle('browser-active', id === 'v-browser');
     $$('.view').forEach(function (v) { v.hidden = v.id !== id; });
+    window.dispatchEvent(new CustomEvent('slipstreamnavigate', { detail: { view: id } }));
     var key = NAV[id] || '';
     $$('[data-nav]').forEach(function (a) { a.classList.toggle('on', a.getAttribute('data-nav') === key); });
     window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
@@ -29,6 +30,7 @@
     if (a === 'category') return showApps(rest || 'all');
     if (a === 'search') return runSearch(rest);
     if (a === 'games') { showView('v-games'); if (G()) G().openWith(rest || ''); return; }
+    if (a === 'ai') return showView('v-ai');
     if (a === 'apps') return showApps('all');
     if (a === 'settings') { renderSettings(); return showView('v-settings'); }
     if (a === 'browser') return showView('v-browser');
@@ -44,8 +46,8 @@
     var c = window.UBG_SUPABASE;
     if (!c) { appsLoaded = true; return Promise.resolve(); }
     return Promise.resolve(c.from('apps').select('*')).then(function (res) {
-      if (res && !res.error && res.data) apps = res.data;
-    }).catch(function (e) { console.error('Data fetch error:', e); }).then(function () { appsLoaded = true; sortApps(); renderHome(); renderApps(); if (current === null) {} });
+      if (res && !res.error && res.data) apps = (window.SlipstreamApps || []).concat(res.data.filter(function (a) { return !window.SlipstreamApps.some(function (b) { return String(a.id) === b.id; }); }));
+    }).catch(function (e) { console.error('Data fetch error:', e); }).then(function () { appsLoaded = true; sortApps(); renderHome(); renderApps();  });
   }
   function sortApps() {
     sorted = apps.filter(function (a) { return category === 'all' || a.category === category; });
@@ -64,19 +66,20 @@
   /* ---------- home ---------- */
   function renderCollage() {
     var el = $('#collage'), g = G(); if (!el || !g) return;
-    el.innerHTML = g.pick(6).map(function (x) { return g.tileHtml(x, { noFav: true }); }).join('');
+    var picks = g.featured(6);
+    el.innerHTML = [picks.slice(0, 3), picks.slice(3, 6)].map(function (row) { return '<div class="collage-row"><div class="collage-track">' + row.map(function (x) { return g.tileHtml(x, { noFav: true }); }).join('') + '</div></div>'; }).join('');
   }
   function renderHome() {
     var g = G();
     var n = $('#hx-count'); if (n && g) n.textContent = g.total().toLocaleString();
     var na = $('#hx-apps'); if (na) na.textContent = apps.length.toLocaleString();
     var name = window.UBGStore && window.UBGStore.get().profile.name;
-    var eb = $('#hero-eyebrow'); if (eb) eb.textContent = name && name !== 'Player' ? 'Welcome back, ' + name : 'Your hub';
+    var eb = $('#hero-eyebrow'); if (eb) eb.textContent = name && name !== 'Player' ? 'Welcome back, ' + name : '';
     renderCollage();
     var rec = g ? g.recent(12) : [], cont = $('#blk-continue');
     cont.hidden = !rec.length;
     $('#continue-track').innerHTML = rec.map(function (x) { return g.tileHtml(x); }).join('');
-    $('#home-games').innerHTML = g ? g.pick(14).map(function (x) { return g.tileHtml(x); }).join('') : '';
+    $('#home-games').innerHTML = g ? g.featured(14).map(function (x) { return g.tileHtml(x); }).join('') : '';
     var top = apps.slice().sort(function (a, b) { return (b.downloads || 0) - (a.downloads || 0); }).slice(0, 6);
     $('#blk-trending').hidden = !top.length;
     $('#trending').innerHTML = top.map(function (a, i) {
@@ -143,7 +146,11 @@
     if (push !== false) location.hash = 'app/' + a.id;
     $('#detail-app-img').src = a.img || ''; $('#detail-app-title').textContent = a.name || '';
     $('#detail-cat').textContent = a.category || 'App';
+    $('#detail-play').textContent = a.proxy_url || String(a.id).startsWith('slipstream-') ? 'Open app' : 'Play now';
+    $('#detail-download').hidden = !a.download_url && !a.app_url;
+    if (a.proxy_url) $('#detail-download').hidden = true;
     $('#detail-by').textContent = a.developer ? 'by ' + a.developer : '';
+    $('#detail-stats').hidden = String(a.id).startsWith('slipstream-');
     $('#detail-stat-downloads').textContent = a.downloads !== undefined ? Number(a.downloads).toLocaleString() : '—';
     $('#detail-stat-filesize').textContent = a.file_size || '—'; $('#detail-stat-category').textContent = a.category || '—';
     $('#detail-stat-developer').textContent = a.developer || '—'; $('#detail-stat-submittedby').textContent = a.submitted_by || '—';
@@ -152,6 +159,7 @@
     showView('v-app');
     setTimeout(function () { if (c.scrollHeight > w.clientHeight + 4) b.hidden = false; else w.classList.remove('clamp'); }, 60);
     var tl = $('#versions-timeline-container'); tl.innerHTML = '';
+    tl.previousElementSibling.hidden = String(a.id).startsWith('slipstream-');
     var cl = window.UBG_SUPABASE;
     if (cl) {
       Promise.resolve(cl.from('app_versions').select('*').eq('app_id', a.id).order('release_date', { ascending: false })).then(function (res) {
@@ -169,25 +177,15 @@
   /* ---------- app player ---------- */
   function launchPlayer(push) {
     var a = current; if (!a) return;
-    if (push !== false) location.hash = 'play/' + a.id;
-    var iframe = $('#player-iframe'), loader = $('#player-loader-overlay'), tip = $('#player-loader-tip'), ult = window.UBG.settings.ultOpt;
-    $('#player-app-title').textContent = a.name || 'App';
-    tip.textContent = ult ? '' : TIPS[Math.floor(Math.random() * TIPS.length)];
-    loader.classList.remove('done'); loader.style.display = 'flex';
-    iframe.removeAttribute('src'); iframe.removeAttribute('srcdoc');
-    var done = function () { setTimeout(function () { loader.classList.add('done'); setTimeout(function () { loader.style.display = 'none'; }, 320); }, ult ? 300 : 1200 + Math.floor(Math.random() * 800)); };
-    if (a.html_code) iframe.srcdoc = a.html_code;
-    else if (a.app_url) {
-      fetch(a.app_url).then(function (r) { if (!r.ok) throw new Error('fetch'); return r.text(); }).then(function (h) { iframe.srcdoc = h; }).catch(function () { iframe.src = a.app_url; });
-    } else iframe.srcdoc = '<html><body style="background:#000;color:#fff;display:grid;place-items:center;height:100vh;font-family:sans-serif"><h3>No playable content found for this app.</h3></body></html>';
-    showView('v-player'); done();
+    if (push !== false) {
+      location.hash = 'play/' + a.id;
+      return;
+    }
+    showView('v-player');
+    window.SlipstreamAppPlayer.open(a);
   }
   function closePlayer() {
-    var iframe = $('#player-iframe');
-    if (window.UBG.settings.ramOpt && iframe) { iframe.src = 'about:blank'; iframe.removeAttribute('srcdoc'); }
-    if (document.fullscreenElement) document.exitFullscreen().catch(function () {});
-    $('#v-player').hidden = true; document.body.style.overflow = '';
-    if (current) location.hash = 'app/' + current.id; else location.hash = 'home';
+    window.SlipstreamAppPlayer.close();
   }
 
   /* ---------- settings ---------- */
@@ -195,7 +193,7 @@
     var S = window.UBG.settings, T = window.UBG.themes;
     $('#theme-grid').innerHTML = Object.keys(T).map(function (k) { var t = T[k]; return '<button type="button" class="theme-card' + (S.theme === k ? ' on' : '') + '" data-theme-key="' + k + '"><span class="prev"><i style="background:' + t.bg + '"></i><i style="background:' + t.panel + '"></i><i style="background:' + t.accent + '"></i><i style="background:' + t.accent2 + '"></i></span><b>' + t.name + '</b></button>'; }).join('');
     $('#tab-icons').innerHTML = window.UBG.icons.map(function (i) { return '<button type="button" class="icon-pick' + (S.tabIcon === i[1] ? ' on' : '') + '" data-icon="' + esc(i[1]) + '" title="' + i[0] + '" aria-label="' + i[0] + '"><img src="' + esc(i[1]) + '" alt=""></button>'; }).join('');
-    $('#tab-name-input').value = S.tabName === 'UBGForever' ? '' : S.tabName;
+    $('#tab-name-input').value = S.tabName === 'Slipstream' ? '' : S.tabName;
     $('#toggle-ram-opt').checked = S.ramOpt; $('#toggle-ult-opt').checked = S.ultOpt;
     window.UBG.paintPlaytime();
   }
@@ -211,7 +209,7 @@
     window.addEventListener('ubgenter', function () { route(); });
     window.addEventListener('ubgrecent', function () { if (!$('#v-home').hidden) renderHome(); });
     window.addEventListener('ubggames', function () { renderHome(); });
-    window.addEventListener('ubgstatechange', function () { if (!$('#v-home').hidden) { var eb = $('#hero-eyebrow'); var name = window.UBGStore.get().profile.name; if (eb) eb.textContent = name && name !== 'Player' ? 'Welcome back, ' + name : 'Your hub'; } });
+    window.addEventListener('ubgstatechange', function () { if (!$('#v-home').hidden) { var eb = $('#hero-eyebrow'); var name = window.UBGStore.get().profile.name; if (eb) eb.textContent = name && name !== 'Player' ? 'Welcome back, ' + name : ''; } });
 
     // top search
     var input = $('#search-input');
@@ -246,7 +244,7 @@
     $('#apps-more').addEventListener('click', function () { shown += 24; renderApps(); });
 
     // details + player
-    $('#app-back').addEventListener('click', function () { history.length > 1 ? history.back() : (location.hash = 'apps'); });
+    $('#app-back').addEventListener('click', function () { location.hash = 'apps'; });
     $('#detail-play').addEventListener('click', function () { launchPlayer(true); });
     $('#detail-download').addEventListener('click', function () {
       if (!current) return; var t = current.download_url || current.app_url; if (!t) return U.toast('No download available for this app');
@@ -254,10 +252,6 @@
     });
     $('#detail-desc-btn').addEventListener('click', function () { var w = $('#detail-desc-wrapper'), open = w.classList.toggle('clamp'); this.textContent = open ? 'Read more' : 'Show less'; });
     $('#versions-timeline-container').addEventListener('click', function (e) { var b = e.target.closest('[data-ver]'); if (!b) return; var n = $('#vn-' + b.getAttribute('data-ver')); if (n) n.hidden = !n.hidden; });
-    $('#player-exit').addEventListener('click', closePlayer);
-    $('#player-newtab').addEventListener('click', function () { if (current && current.app_url) window.open(current.app_url, '_blank'); });
-    $('#player-download').addEventListener('click', function () { $('#detail-download').click(); });
-    $('#player-full').addEventListener('click', function () { var t = $('#player-frame-container'); if (!document.fullscreenElement) t.requestFullscreen().catch(function () {}); else document.exitFullscreen(); });
 
     // settings
     var settingsEl = $('#v-settings');

@@ -1,0 +1,9 @@
+Opening screen references supplied by the user: Harvard in the World homepage screenshot.
+Horizontal Harvard wordmark extracted from Harvard's public theme CSS:
+https://www.harvard.edu/wp-content/themes/core/assets/css/dist/theme/master.min.css
+Globe video source:
+https://www.harvard.edu/wp-content/uploads/2026/09/slow-globe2.mp4
+Local globe.webm is a 15fps VP9 transcode (~816KiB); globe.webp is its static poster.
+No Harvard scripts, tracking, forms, logins or authentication flow were copied.
+Menu is a local entry control. Other university links lead to their stated external sites.
+This reference recreation is part of the local opening screen, not a claim of affiliation.
