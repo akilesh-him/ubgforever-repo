@@ -1,3 +1,4 @@
+import providerCatalog from './js/provider-catalog.json' with { type: 'json' };
 import { aiPolicy } from "./js/ai-policy.mjs";
 import http from "node:http";
 import { readFile, stat } from "node:fs/promises";
@@ -6,6 +7,7 @@ import { dirname, resolve, extname, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { server as wisp } from "@mercuryworkshop/wisp-js/server";
 import { answer, validateMessages } from "./ai-service.mjs";
+import { allowedOrigin, parsePublicOrigins } from "./server-origins.mjs";
 const root = dirname(fileURLToPath(import.meta.url));
 const mime = {
   ".html": "text/html; charset=utf-8",
@@ -29,6 +31,7 @@ const routes = {
     "node_modules/@mercuryworkshop/epoxy-transport/dist",
   ),
 };
+const providerFiles = new Map(providerCatalog.games.map(game => [game.provider + '|' + game.file, game.file]));
 const rates = new Map();
 function json(res, status, data) {
   res.writeHead(status, {
@@ -37,7 +40,28 @@ function json(res, status, data) {
   });
   res.end(JSON.stringify(data));
 }
+async function serveGameProxy(req, res, url) {
+  if (req.method !== 'GET') return json(res, 405, { error: 'Use GET.' });
+  const provider = url.searchParams.get('provider') || '';
+  const file = url.searchParams.get('file') || '';
+  const target = provider === 'ugs' && /^cl[^/\\]+\.html$/.test(file)
+    ? 'https://cdn.jsdelivr.net/gh/bubbls/ugs-singlefile@main/UGS-Files/' + encodeURIComponent(file)
+    : providerFiles.get(provider + '|' + file);
+  if (!target) return json(res, 400, { error: 'Unknown game destination.' });
+  try {
+    const response = await fetch(target, { signal: AbortSignal.timeout(30000) });
+    if (!response.ok) return json(res, response.status, { error: 'Game source is unavailable.' });
+    const base = '<base href="' + new URL('.', target).href.replaceAll('&', '&amp;').replaceAll('"', '&quot;') + '">';
+    const original = await response.text();
+    const html = /<head\b[^>]*>/i.test(original) ? original.replace(/<head\b[^>]*>/i, match => match + base) : base + original;
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache' });
+    res.end(html);
+  } catch {
+    json(res, 502, { error: 'Game source could not be reached. Please retry.' });
+  }
+}
 export function createSlipstreamServer() {
+  const publicOrigins = parsePublicOrigins(process.env.PUBLIC_ORIGINS || "");
   const server = http.createServer(async (req, res) => {
     try {
       const url = new URL(req.url, "http://localhost");
@@ -47,9 +71,7 @@ export function createSlipstreamServer() {
         if (req.method !== "POST")
           return json(res, 405, { error: "Use POST." });
         if (
-          req.headers.origin &&
-          req.headers.origin !== "http://" + req.headers.host &&
-          req.headers.origin !== "https://" + req.headers.host
+          !allowedOrigin(req.headers.origin, req.headers.host, publicOrigins)
         )
           return json(res, 403, { error: "Origin not allowed." });
         if (!process.env.OPENROUTER_API_KEY)
@@ -105,6 +127,7 @@ export function createSlipstreamServer() {
           });
         }
       }
+      if (url.pathname === '/game-proxy') return await serveGameProxy(req, res, url);
       if (!["GET", "HEAD"].includes(req.method))
         return json(res, 405, { error: "Method not allowed." });
       const pathname = decodeURIComponent(url.pathname);
@@ -156,8 +179,7 @@ export function createSlipstreamServer() {
     try {
       if (
         req.url === "/wisp/" &&
-        (!req.headers.origin ||
-          new URL(req.headers.origin).host === req.headers.host)
+        allowedOrigin(req.headers.origin, req.headers.host, publicOrigins)
       )
         wisp.routeRequest(req, socket, head);
       else socket.destroy();

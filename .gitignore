@@ -53,3 +53,5 @@ Thumbs.db
 .env.*
 !.env.example
 artifacts/
+azion.config.json
+.azion/

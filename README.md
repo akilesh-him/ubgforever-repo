@@ -42,3 +42,7 @@ Leaderboard SQL is in `supabase-leaderboard.sql`. It is supplied for manual appl
 Game cover provenance is recorded in `tools/artwork-sources.json`. App logo sources are in `img/apps/SOURCES.md`. Wispcraft and its base client are documented in `apps/wispcraft/SOURCES.txt`. Opening assets are documented in `img/landing/SOURCES.txt`.
 
 Local preview work is authorized. Push, merge, deployment and database migrations still require the user's explicit go.
+
+## Azion deployment
+
+See [the Azion guide](docs/AZION.md) for the configuration generator, containerized Node origin and required WebSocket Proxy setup. Static hosting alone cannot run AI or Wisp.

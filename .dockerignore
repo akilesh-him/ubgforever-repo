@@ -1,0 +1,8 @@
+.git
+node_modules
+dist
+.env
+.env.*
+artifacts
+AI_HANDOFF.txt
+CURSOR_HANDOFF.md

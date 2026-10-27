@@ -212,6 +212,10 @@
             <button class="btn accent" id="tab-name-save" type="button">Save name</button>
           </div>
         </section>
+        <section class="card" data-text-cloak-control>
+          <h2>Text cloaking</h2>
+          <label class="toggle"><input id="toggle-text-cloaking" type="checkbox"/><span class="tg"></span><span><b>Obfuscate visible text</b><small>Use accented letters and replace e with 3. Typed text and saved data stay unchanged.</small></span></label>
+        </section>
         <section class="card">
           <h2>Performance</h2>
           <label class="toggle"><input id="toggle-ram-opt" type="checkbox"/><span class="tg"></span><span><b>Free memory when closing apps</b><small>Unloads an app as soon as you leave its player.</small></span></label>
@@ -317,6 +321,13 @@
     </div>
   </section>
 </div>
+<dialog id="age-dialog" aria-labelledby="age-title" data-text-cloak-control>
+  <form id="age-form">
+    <h2 id="age-title">Before entering Slipstream</h2>
+    <label class="age-confirm"><input id="age-confirm" type="checkbox" required/><span>I confirm that I am 13 years old or older.</span></label>
+    <button class="btn accent" type="submit">Continue</button>
+  </form>
+</dialog>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script src="js/storage.js"></script>
@@ -330,6 +341,7 @@
 <script src="js/browser.js"></script>
 <script type="module" src="js/ai.js"></script>
 <script src="js/chat.js"></script>
+<script src="js/games-providers.js"></script>
 <script src="js/games-data.js"></script>
 <script src="js/game-art.js"></script>
 <script src="js/games.js"></script>
@@ -339,5 +351,9 @@
 <script src="js/app.js"></script>
 <script type="module" src="js/taskbar.js"></script>
 <script src="js/overlay-controls.js"></script>
+<script type="module">
+  import { mountTextCloaking } from './js/text-cloaking.mjs';
+  mountTextCloaking(document.body, document.getElementById('toggle-text-cloaking'));
+</script>
 </body>
 </html>

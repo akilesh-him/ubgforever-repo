@@ -1,48 +1,83 @@
 /* UBGForever games: list, cover art, favorites, recents, Games page and in-page player.
  * Source: github.com/bubbls/ugs-singlefile (UGS-Files). js/games-data.js is a bundled
- * snapshot; the list is refreshed live from jsDelivr when reachable. */
+ * snapshot; the list is refreshed live from jsDelivr when reachable. Additional game
+ * providers are registered in js/games-providers.js and their catalogs are fetched live.
+ * Game files load through the same origin game proxy so direct provider urls are never
+ * exposed to blockers. Duplicate games across providers keep the highest priority most
+ * polished up to date copy. */
 (function () {
   'use strict';
-  var REPO = 'bubbls/ugs-singlefile', BRANCH = 'main', FOLDER = 'UGS-Files';
-  var CDN = 'https://cdn.jsdelivr.net/gh/' + REPO + '/' + FOLDER + '/';
-  var RAW = 'https://raw.githubusercontent.com/' + REPO + '/' + BRANCH + '/' + FOLDER + '/';
-  var LIST_API = 'https://data.jsdelivr.com/v1/packages/gh/' + REPO + '@' + BRANCH + '?structure=flat';
+  var LIST_API = 'https://data.jsdelivr.com/v1/packages/gh/bubbls/ugs-singlefile@main?structure=flat';
+  var PROXY = '/game-proxy';
   var PAGE = 120, FAV_KEY = 'ubg_game_favs', REC_KEY = 'ubg_game_recent';
+  var CATALOG_TIMEOUT = 15000;
 
+  var providerGames = [], bundledGames = [], providerFilter = 'ugs';
   var root = null;
   var all = [], byId = {}, filtered = [], rendered = 0, query = '', letter = 'ALL', observer = null;
   var favs = readList(FAV_KEY), recents = readList(REC_KEY);
   var activeId = null, activeBlob = null;
+  var providerPriority = {};
+  (window.UBG_GAME_PROVIDERS || []).forEach(function (p) {
+    providerPriority[p.id] = p.priority == null ? 99 : p.priority;
+  });
 
   function readList(k) { try { var v = JSON.parse(localStorage.getItem(k) || '[]'); return Array.isArray(v) ? v : []; } catch (e) { return []; } }
   function writeList(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
   function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
   function cssEsc(s) { return String(s).replace(/["\\]/g, '\\$&'); }
 
+  function normId(id) {
+    return String(id).replace(/^cl/i, '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  }
+  function canonId(id) {
+    var n = normId(id);
+    return n ? 'cl' + n : String(id);
+  }
   function prettify(id) {
     var s = id.replace(/^cl/i, '').replace(/_/g, ' ').replace(/([a-z])([A-Z])/g, '$1 $2').replace(/\s+/g, ' ').trim();
     return s.charAt(0).toUpperCase() + s.slice(1);
   }
-  function makeGame(id) {
-    var name = id === 'wispcraft' ? 'Wispcraft' : (window.UBG_GAME_TITLES && window.UBG_GAME_TITLES[id]) || prettify(id);
+  function makeGame(g) {
+    var id = g.id;
+    var name = g.name || (window.UBG_GAME_TITLES && window.UBG_GAME_TITLES[id]) || prettify(id);
+    var file = g.file || id + '.html';
+    var cover = g.cover || null;
     var c = name.charAt(0).toUpperCase();
-    return { id: id, name: name, search: (name + ' ' + id.replace(/^cl/i, '')).toLowerCase(), letter: /[A-Z]/.test(c) ? c : '#' };
+    return { id: id, name: name, provider: g.provider || 'ugs', file: file, cover: cover,
+      search: (name + ' ' + id.replace(/^cl/i, '')).toLowerCase(), letter: /[A-Z]/.test(c) ? c : '#', norm: normId(id) };
   }
-  function setGames(ids) {
-    ids = ids.filter(function (id) { return id !== 'wispcraft'; }).concat('wispcraft');
-    all = ids.filter(function (id) { return id.toLowerCase() !== 'clai'; }).map(makeGame).sort(function (a, b) { var art = window.SlipstreamGameArt || {};
-      return Number(Boolean(art[b.id])) - Number(Boolean(art[a.id])) ||
-        a.name.localeCompare(b.name, 'en', { sensitivity: 'base', numeric: true }); });
-    byId = {}; all.forEach(function (g) { byId[g.id] = g; });
+  function setGames(games) {
+    var remote = games.filter(function (g) { return g.id !== 'wispcraft'; });
+    var local = [{ id: 'wispcraft', name: 'Wispcraft', provider: 'ugs', file: '/apps/wispcraft/index.html' }];
+    // dedup by normalized id: keep highest priority most polished up to date provider copy
+    var chosen = {};
+    remote.forEach(function (g) {
+      var key = g.norm || normId(g.name || g.id);
+      var cur = chosen[key];
+      var rank = providerPriority[g.provider] == null ? 99 : providerPriority[g.provider];
+      if (!cur || rank < (providerPriority[cur.provider] == null ? 99 : providerPriority[cur.provider])) {
+        chosen[key] = g;
+      }
+    });
+    providerGames = remote.filter(function (g) { return g.id.toLowerCase() !== 'clai'; }).concat(local).map(makeGame);
+    remote = Object.values(chosen);
+    remote = remote.filter(function (g) { return g.id.toLowerCase() !== 'clai'; });
+    all = remote.concat(local).map(makeGame).sort(function (a, b) {
+      var art = window.SlipstreamGameArt || {};
+      return Number(Boolean(art[b.id] || b.cover)) - Number(Boolean(art[a.id] || a.cover)) ||
+        a.name.localeCompare(b.name, 'en', { sensitivity: 'base', numeric: true });
+    });
+    byId = {}; providerGames.forEach(function (g) { byId[g.id] = g; }); all.forEach(function (g) { byId[g.id] = g; });
   }
 
   /* ---------- cover art ---------- */
   function coverHtml(g) {
-    var art = (window.SlipstreamGameArt || {})[g.id];
+    var art = g.cover || (window.SlipstreamGameArt || {})[g.id];
     return '<span class="cover"><span class="mono" aria-hidden="true">' + esc(g.name.replace(/[^a-z0-9]/gi, '').slice(0, 2).toUpperCase()) + '</span>' + (art ? '<img class="cover-img" src="' + esc(art) + '" alt="" loading="lazy" decoding="async" onerror="this.remove()">' : '') + '</span>';
   }
 
-  var STAR = function (on) { return '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.9L12 16.9 6.8 19.7l1-5.9L3.5 9.7l5.9-.8z" fill="' + (on ? 'currentColor' : 'none') + '" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>'; };
+  var STAR = function (on) { return '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M12 3.5l2.6 5.4 5.9 .8-4.3 4.1 1 5.9L12 16.9 6.8 19.7l1-5.9L3.5 9.7l5.9-.8z" fill="' + (on ? 'currentColor' : 'none') + '" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>'; };
   function tileHtml(g, opts) {
     opts = opts || {};
     var on = favs.indexOf(g.id) !== -1;
@@ -96,7 +131,7 @@
     window.dispatchEvent(new CustomEvent('ubgrecent'));
   }
   function row(title, ids) {
-    var games = ids.map(function (id) { return byId[id]; }).filter(Boolean);
+    var games = ids.map(function (id) { return byId[id]; }).filter(function (game) { return game && game.provider === providerFilter; });
     return games.length ? '<section class="g-shelf"><h2>' + title + '</h2><div class="row-track">' + games.map(function (g) { return tileHtml(g); }).join('') + '</div></section>' : '';
   }
   function renderShelves() {
@@ -105,6 +140,13 @@
   }
 
   /* ---------- Games page ---------- */
+  function providerOptions() {
+    return (window.UBG_GAME_PROVIDERS || []).filter(function (provider) {
+      return provider.id === 'ugs' || bundledGames.some(function (game) { return game.provider === provider.id; });
+    }).map(function (provider) {
+      return '<option value="' + esc(provider.id) + '"' + (provider.id === providerFilter ? ' selected' : '') + '>' + esc(provider.name) + '</option>';
+    }).join('');
+  }
   function mount() {
     root = document.getElementById('v-games'); if (!root) return;
     var letters = ['ALL', '#']; for (var i = 65; i <= 90; i++) letters.push(String.fromCharCode(i));
@@ -113,13 +155,15 @@
       '<div class="g-bar"><label class="g-search"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M21 21l-4.3-4.3M10.5 18a7.5 7.5 0 110-15 7.5 7.5 0 010 15z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>' +
         '<input id="g-search" type="search" autocomplete="off" spellcheck="false" placeholder="Search games" aria-label="Search games"/><kbd aria-hidden="true">/</kbd></label>' +
         '<button type="button" class="btn accent" id="g-surprise">Surprise me</button></div>' +
-      '<div class="g-letters" id="g-letters" role="group" aria-label="Filter by first letter">' +
+      '<div class="g-filters"><div class="g-letters" id="g-letters" role="group" aria-label="Filter by first letter">' +
         letters.map(function (l) { return '<button type="button" class="g-letter' + (l === 'ALL' ? ' on' : '') + '" data-letter="' + l + '" aria-pressed="' + (l === 'ALL') + '">' + (l === 'ALL' ? 'All' : l) + '</button>'; }).join('') + '</div>' +
+      '<label class="g-provider-select"><span class="sr-only">Game provider</span><select id="g-provider-select" aria-label="Game provider">' + providerOptions() + '</select></label></div>' +
       '<div id="g-shelves"></div><div id="g-list"></div><div id="g-sentinel" style="height:1px"></div>';
 
     var input = root.querySelector('#g-search'), t = null;
     input.addEventListener('input', function (e) { var v = e.target.value; clearTimeout(t); t = setTimeout(function () { query = v.trim().toLowerCase(); applyFilter(); }, 100); });
     root.querySelector('#g-surprise').addEventListener('click', surprise);
+    root.querySelector('#g-provider-select').onchange = function (event) { providerFilter = event.target.value; applyFilter(); };
     root.querySelector('#g-letters').addEventListener('click', function (e) { var b = e.target.closest('.g-letter'); if (b) setLetter(b.getAttribute('data-letter')); });
     document.addEventListener('keydown', function (e) {
       if (e.key === '/' && !root.hidden && !/INPUT|TEXTAREA|SELECT/.test((document.activeElement || {}).tagName || '')) { e.preventDefault(); input.focus(); }
@@ -136,11 +180,12 @@
     applyFilter();
   }
   function applyFilter() {
-    filtered = all.filter(function (g) { return (letter === 'ALL' || g.letter === letter) && (!query || g.search.indexOf(query) !== -1); });
+    var pool = providerGames.filter(function (g) { return g.provider === providerFilter; });
+    filtered = pool.filter(function (g) { return (letter === 'ALL' || g.letter === letter) && (!query || g.search.indexOf(query) !== -1); });
     rendered = 0;
     var list = root.querySelector('#g-list'); list.innerHTML = '';
     var c = root.querySelector('#g-count');
-    c.textContent = filtered.length === all.length ? all.length.toLocaleString() : filtered.length.toLocaleString() + ' of ' + all.length.toLocaleString();
+    c.textContent = filtered.length === pool.length ? pool.length.toLocaleString() : filtered.length.toLocaleString() + ' of ' + pool.length.toLocaleString();
     renderShelves();
     if (!filtered.length) {
       list.innerHTML = '<div class="empty"><b>No games found</b>Nothing matches “' + esc(query || letter) + '”. Try fewer letters or clear the filter.<br><button type="button" class="btn outline" id="g-clear">Clear search</button></div>';
@@ -174,16 +219,61 @@
   function surprise() { if (all.length) play(all[Math.floor(Math.random() * all.length)].id); }
 
   /* ---------- list loading ---------- */
-  function loadSnapshot() { var s = window.UBG_GAMES_SNAPSHOT; if (Array.isArray(s) && s.length) setGames(s); }
+  function loadSnapshot() {
+    var s = window.UBG_GAMES_SNAPSHOT;
+    if (Array.isArray(s) && s.length) {
+      setGames(s.map(function (id) {
+        return { id: id, provider: 'ugs', file: id + '.html', name: null, norm: normId(id) };
+      }));
+    }
+  }
+  function fetchJson(u, timeout) {
+    var controller = new AbortController();
+    var timer = setTimeout(function () { controller.abort(); }, timeout || CATALOG_TIMEOUT);
+    return fetch(u, { cache: 'no-cache', signal: controller.signal })
+      .then(function (r) {
+        clearTimeout(timer);
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
+      .catch(function (e) {
+        clearTimeout(timer);
+        throw e;
+      });
+  }
+  function loadUgs() {
+    return fetchJson(LIST_API).then(function (d) {
+      var p = '/UGS-Files/';
+      return (d.files || []).map(function (f) { return f.name; })
+        .filter(function (n) { return n.indexOf(p) === 0 && /^cl[^/]+\.html$/.test(n.slice(p.length)); })
+        .map(function (n) {
+          var id = n.slice(p.length, -5);
+          return { id: id, provider: 'ugs', file: id + '.html', name: null, norm: normId(id) };
+        });
+    });
+  }
+  function snapshotGames() {
+    return (window.UBG_GAMES_SNAPSHOT || []).map(function (id) {
+      return { id: id, provider: 'ugs', file: id + '.html', norm: normId(id) };
+    });
+  }
   function refreshLive() {
-    return fetch(LIST_API, { cache: 'no-cache' }).then(function (r) { if (!r.ok) throw new Error('list ' + r.status); return r.json(); })
-      .then(function (d) {
-        var p = '/' + FOLDER + '/';
-        var ids = (d.files || []).map(function (f) { return f.name; }).filter(function (n) { return n.indexOf(p) === 0 && /^cl[^/]+\.html$/.test(n.slice(p.length)); }).map(function (n) { return n.slice(p.length, -5); });
-        if (ids.length < 50) throw new Error('list too small');
-        setGames(ids); if (root) applyFilter();
+    fetchJson('/js/provider-catalog.json').then(function (catalog) {
+      bundledGames = catalog.games;
+      setGames(snapshotGames().concat(bundledGames));
+      if (root) {
+        root.querySelector('#g-provider-select').innerHTML = providerOptions();
+        applyFilter();
+      }
+      window.dispatchEvent(new CustomEvent('ubggames'));
+      return loadUgs().then(function (games) {
+        if (games.length) setGames(games.concat(bundledGames));
+        if (root) applyFilter();
         window.dispatchEvent(new CustomEvent('ubggames'));
-      }).catch(function (e) { console.warn('[Games] live list unavailable, using bundled snapshot:', e.message); });
+      }).catch(function () {});
+    }).catch(function (error) {
+      console.warn('[Games] bundled providers unavailable:', error.message);
+    });
   }
 
   /* ---------- player ---------- */
@@ -214,9 +304,14 @@
   }
   function fetchText(u) { return fetch(u).then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); }); }
   function wispcraftUrl() { return '/apps/wispcraft/index.html?wisp=' + encodeURIComponent((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/wisp/'); }
+  function proxyUrl(provider, file) {
+    return PROXY + '?provider=' + encodeURIComponent(provider) + '&file=' + encodeURIComponent(file);
+  }
   function play(id, isReload) {
     if (!id) return;
-    var g = byId[id] || makeGame(id), el = ensurePlayer(), frame = el.querySelector('#game-frame'), file = encodeURIComponent(id + '.html');
+    var g = byId[id] || makeGame({ id: id, provider: 'ugs', file: id + '.html', name: null, norm: normId(id) });
+    var provider = g.provider || 'ugs';
+    var el = ensurePlayer(), frame = el.querySelector('#game-frame');
     activeId = id;
     el.querySelector('#game-title').textContent = g.name;
     el.querySelector('#game-fav').classList.toggle('on', favs.indexOf(id) !== -1);
@@ -233,7 +328,7 @@
       return;
     }
     frame.onload = null;
-    fetchText(CDN + file).catch(function () { return fetchText(RAW + file); }).then(function (html) {
+    fetchText(proxyUrl(provider, g.file)).then(function (html) {
       if (activeId !== id) return;
       if (activeBlob) URL.revokeObjectURL(activeBlob);
       activeBlob = URL.createObjectURL(new Blob([html], { type: 'text/html' }));

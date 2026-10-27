@@ -260,9 +260,15 @@ test("opening screen reveals the hub only on Menu, not search, visibility or mot
     "entrance-search",
     "entrance-menu",
     "entrance-query",
+    "age-dialog",
+    "age-form",
+    "age-confirm",
   ]) {
     elements[id] = { hidden: true, setAttribute() {}, focus() {} };
   }
+  elements['age-dialog'].showModal = function () { this.open = true; };
+  elements['age-dialog'].close = function () { this.open = false; };
+  elements['age-confirm'].checked = false;
   elements["entrance-globe"] = video;
   const context = {
     window: {
@@ -306,6 +312,12 @@ test("opening screen reveals the hub only on Menu, not search, visibility or mot
   elements["entrance-search-toggle"].onclick();
   assert.equal(entries, 0);
   elements["entrance-menu"].onclick();
+  assert.equal(entries, 0);
+  assert.equal(elements['age-dialog'].open, true);
+  elements['age-form'].onsubmit({ preventDefault() {} });
+  assert.equal(entries, 0);
+  elements['age-confirm'].checked = true;
+  elements['age-form'].onsubmit({ preventDefault() {} });
   elements["entrance-menu"].onclick();
   assert.equal(entries, 1);
   assert.equal(video.paused, true);

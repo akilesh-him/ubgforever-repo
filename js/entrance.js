@@ -60,11 +60,27 @@
     if (!search.hidden) document.getElementById("entrance-query").focus();
   };
 
-  document.getElementById("entrance-menu").onclick = function () {
+  var ageDialog = document.getElementById('age-dialog');
+  var ageConfirmed = false;
+  try { ageConfirmed = localStorage.getItem('slipstream-age-confirmed') === 'true'; } catch {}
+  function enter() {
     if (entered) return;
     entered = true;
     video.pause();
     window.enterUBGMain();
+  }
+  document.getElementById('entrance-menu').onclick = function () {
+    if (entered) return;
+    if (ageConfirmed) enter();
+    else if (!ageDialog.open) ageDialog.showModal();
+  };
+  document.getElementById('age-form').onsubmit = function (event) {
+    event.preventDefault();
+    if (!document.getElementById('age-confirm').checked) return;
+    ageConfirmed = true;
+    try { localStorage.setItem('slipstream-age-confirmed', 'true'); } catch {}
+    ageDialog.close();
+    enter();
   };
 
   document.addEventListener("keydown", function (event) {

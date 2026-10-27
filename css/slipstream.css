@@ -1085,6 +1085,14 @@ body {
   border-color: #ffb2b92e;
 }
 
+.g-filters {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.g-filters .g-letters { flex: 1; min-width: 0; }
+
 .p-tabs {
   gap: 4px;
   padding: 5px;
@@ -2191,3 +2199,17 @@ body.effects-reduced .ai-jump-latest,
     transparent
   );
 }
+
+.g-provider-option:disabled { opacity: .45; cursor: default; }
+
+.g-provider-select { flex: none; position: relative; max-width: 42%; }
+.g-provider-select select { width: 180px; max-width: 100%; height: 44px; padding: 0 32px 0 12px; border: 1px solid var(--glass-edge); border-radius: 12px; background: rgba(43, 33, 43, .6); color: var(--text); font: inherit; font-size: 13px; color-scheme: dark; cursor: pointer; }
+.g-provider-select option { background: #241d28; color: var(--text); }
+@media (max-width: 700px) { .g-provider-select select { width: 138px; } }
+
+#age-dialog { width: min(420px, calc(100vw - 32px)); padding: 26px; border: 1px solid var(--glass-edge); border-radius: 24px; background: var(--panel); color: var(--text); box-shadow: 0 24px 80px #0006; }
+#age-dialog::backdrop { background: #100d1680; backdrop-filter: blur(8px); }
+#age-dialog h2 { font-size: 21px; margin-bottom: 20px; }
+.age-confirm { display: flex; align-items: flex-start; gap: 12px; line-height: 1.6; margin-bottom: 24px; cursor: pointer; }
+.age-confirm input { flex: none; width: 20px; height: 20px; margin-top: 3px; accent-color: var(--accent); }
+#age-dialog .btn { width: 100%; }
