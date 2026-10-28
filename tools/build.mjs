@@ -1,7 +1,7 @@
 import { readdir, readFile, cp, mkdir, rm, access } from "node:fs/promises";
 import { spawnSync } from "node:child_process";
 import { resolve, dirname } from "node:path";
-for (const directory of ["js", "tools", "tests", "."]) {
+for (const directory of ["js", "tools", "tests", "api", "."]) {
   for (const entry of await readdir(directory, { withFileTypes: true })) {
     if (!entry.isFile() || !/\.(m?js|cjs)$/.test(entry.name)) continue;
     const result = spawnSync(
@@ -34,6 +34,7 @@ for (const entry of [
   "js",
   "img",
   "apps",
+  "links",
   "game-pictures",
 ])
   await cp(entry, "dist/" + entry, { recursive: true });

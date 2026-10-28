@@ -1,3 +1,4 @@
+import { readAIResponse } from "./ai-response.mjs";
 import { mountChatScroll } from "./ai-scroll.mjs";
 import { createAttachmentQueue, messagePayload } from "./ai-attachments.mjs";
 import { aiPolicy } from "./ai-policy.mjs";
@@ -176,9 +177,7 @@ import { aiPolicy } from "./ai-policy.mjs";
             messages: history.slice(-aiPolicy.maxMessages),
           }),
         });
-        var data = await response.json();
-        if (!response.ok)
-          throw new Error(data.error || "Could not connect. Please retry.");
+        var data = await readAIResponse(response);
         if (current !== generation) return;
         pending.remove();
         var answer = message("assistant", data.content);
