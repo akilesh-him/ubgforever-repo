@@ -1,6 +1,7 @@
 export const aiPolicy = Object.freeze({
-  model: "dots-studio/dots-3-note-preview:free",
+  model: "qwen/qwen3.8-27b",
   maxFiles: 4,
+  maxImages: 3,
   maxFileBytes: 512 * 1024,
   maxTextCharacters: 2200000,
   maxConversationCharacters: 6000000,

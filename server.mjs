@@ -89,7 +89,7 @@ export function createSlipstreamServer() {
           !allowedOrigin(req.headers.origin, req.headers.host, publicOrigins)
         )
           return json(res, 403, { error: "Origin not allowed." });
-        if (!process.env.OPENROUTER_API_KEY)
+        if (!process.env.GROQ_API_KEY)
           return json(res, 503, {
             error: "AI is not configured on this server.",
           });
@@ -129,7 +129,7 @@ export function createSlipstreamServer() {
             200,
             await answer(
               messages,
-              process.env.OPENROUTER_API_KEY,
+              process.env.GROQ_API_KEY,
               AbortSignal.timeout(120000),
             ),
           );

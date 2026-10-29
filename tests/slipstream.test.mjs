@@ -4,8 +4,8 @@ import { readFile } from "node:fs/promises";
 import vm from "node:vm";
 import { createSlipstreamServer } from "../server.mjs";
 import { validateMessages, answer, model } from "../ai-service.mjs";
-test("AI uses the requested Dots model", () => {
-  assert.equal(model, "dots-studio/dots-3-note-preview:free");
+test("AI uses the Groq vision and tool model", () => {
+  assert.equal(model, "qwen/qwen3.8-27b");
 });
 test("AI rejects injected roles, oversized content, and excess history", () => {
   assert.throws(() =>
@@ -30,6 +30,7 @@ test("AI forwards trusted tool results and returns sources with requested model"
       return Response.json({
         query: { search: [{ title: "Glass", snippet: "A material" }] },
       });
+    assert.equal(url, "https://api.groq.com/openai/v1/chat/completions");
     const body = JSON.parse(options.body);
     assert.equal(body.model, model);
     assert.equal(options.headers.Authorization, "Bearer test-only");
@@ -78,7 +79,7 @@ test("AI handles provider credit errors without exposing credentials", async () 
   try {
     await assert.rejects(
       () => answer([{ role: "user", content: "Hi" }], "secret-test"),
-      /OpenRouter Free is unavailable/,
+      /Groq is unavailable/,
     );
   } finally {
     globalThis.fetch = original;
@@ -359,4 +360,13 @@ test("AI accepts image attachments at 512 KiB and rejects oversized or remote im
       .length,
     65536,
   );
+});
+
+test('Groq image limits count images across the conversation', () => {
+  const image = { type: 'image_url', image_url: { url: 'data:image/png;base64,aGVsbG8=' } };
+  assert.throws(() => validateMessages([
+    { role: 'user', content: [image, image] },
+    { role: 'assistant', content: 'response' },
+    { role: 'user', content: [image, image] },
+  ]), /up to 3 images/);
 });

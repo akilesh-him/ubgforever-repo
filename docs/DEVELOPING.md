@@ -12,7 +12,7 @@ npm test
 npm run build
 ```
 
-The preview is http://localhost:5186/. Set `OPENROUTER_API_KEY` in `.env` for AI. Never put it in a public script. The build validates JavaScript syntax, checks local entry assets and module paths, and copies public assets to `dist/`. It does not replace the Node server needed for AI and Wisp. Reload the page after frontend edits. Restart Node after backend or shared AI policy changes.
+The preview is http://localhost:5186/. Set `GROQ_API_KEY` in `.env` for AI. Never put it in a public script. The build validates JavaScript syntax, checks local entry assets and module paths, and copies public assets to `dist/`. It does not replace the Node server needed for AI and Wisp. Reload the page after frontend edits. Restart Node after backend or shared AI policy changes.
 
 ## Ownership
 
@@ -32,7 +32,7 @@ The preview is http://localhost:5186/. Set `OPENROUTER_API_KEY` in `.env` for AI
 | AI uploads and pasted images | `js/ai-attachments.mjs` |
 | AI scrolling | `js/ai-scroll.mjs` |
 | AI model and limits, client and server | `js/ai-policy.mjs` |
-| OpenRouter and research tools | `ai-service.mjs` |
+| Groq and research tools | `ai-service.mjs` |
 | Profile image validation/cropping | `js/profile-picture.mjs` |
 | Shared motion preference and effects toggle | `js/ui-preferences.mjs` |
 | Profile and settings panels | `js/profile.js`, `js/core.js` |

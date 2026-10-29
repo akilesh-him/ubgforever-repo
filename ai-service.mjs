@@ -1,5 +1,5 @@
 import { aiPolicy } from "./js/ai-policy.mjs";
-const endpoint = "https://openrouter.ai/api/v1/chat/completions";
+const endpoint = "https://api.groq.com/openai/v1/chat/completions";
 export const model = aiPolicy.model;
 const tools = ["web_search", "wikipedia"].map((name) => ({
   type: "function",
@@ -90,6 +90,7 @@ export function validateMessages(input) {
   )
     throw new Error("Send between 1 and 24 messages.");
   let length = 0;
+  let images = 0;
   return input.map((message) => {
     if (!["user", "assistant"].includes(message.role))
       throw new Error("Invalid message role.");
@@ -112,6 +113,7 @@ export function validateMessages(input) {
             /^data:image\/(png|jpeg|webp);base64,([A-Za-z0-9+/]+={0,2})$/.exec(
               part.image_url.url,
             );
+          if (++images > aiPolicy.maxImages) throw new Error("Groq supports up to 3 images per conversation. Start a new chat to send more.");
           if (
             match &&
             Buffer.from(match[2], "base64").length <= aiPolicy.maxFileBytes
@@ -151,14 +153,13 @@ export async function answer(input, apiKey, signal) {
       headers: {
         Authorization: "Bearer " + apiKey,
         "Content-Type": "application/json",
-        "X-Title": "Slipstream",
       },
       body: JSON.stringify({
         model,
         messages,
         tools,
         tool_choice: round === 3 ? "none" : "auto",
-        max_tokens: 2500,
+        max_completion_tokens: 2500,
       }),
     });
     if (!response.ok)
@@ -166,9 +167,9 @@ export async function answer(input, apiKey, signal) {
         response.status === 401
           ? "The AI service key was rejected."
           : response.status === 402
-            ? "OpenRouter Free is unavailable for this account. Please try again later."
+            ? "Groq is unavailable for this account. Please check the account limits."
             : response.status === 404
-              ? "OpenRouter Free has no available provider right now. Please try again later."
+              ? "The configured Groq model is unavailable. Please check model access."
               : "The AI provider is unavailable (" +
                 response.status +
                 "). Please retry.",
