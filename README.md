@@ -48,3 +48,5 @@ Local preview work is authorized. Push, merge, deployment and database migration
 See [the Azion guide](docs/AZION.md) for the configuration generator, containerized Node origin and required WebSocket Proxy setup. Static hosting alone cannot run AI or Wisp.
 
 For Vercel, use the checked-in `vercel.json` and [Vercel setup guide](docs/VERCEL.md). Configure the server key and enable Fluid compute for Wisp WebSockets.
+
+For Render, use a **Web Service** with the included `render.yaml`. See [Render setup](docs/RENDER.md). A Render Static Site cannot run Wisp or AI.

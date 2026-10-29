@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: slipstream
+    runtime: node
+    plan: free
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /healthz
+    envVars:
+      - key: NODE_VERSION
+        value: 22.22.2
+      - key: NODE_ENV
+        value: production
+      - key: HOST
+        value: 0.0.0.0
+      - key: PUBLIC_ORIGINS
+        value: https://slipstream-fr.duckdns.org
+      - key: OPENROUTER_API_KEY
+        sync: false

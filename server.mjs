@@ -67,6 +67,21 @@ export function createSlipstreamServer() {
       const url = new URL(req.url, "http://localhost");
       res.setHeader("X-Content-Type-Options", "nosniff");
       res.setHeader("Referrer-Policy", "same-origin");
+      if (url.pathname === "/healthz") {
+        if (!["GET", "HEAD"].includes(req.method)) return json(res, 405, { error: "Use GET." });
+        try {
+          await Promise.all([
+            stat(resolve(routes["/scramjet/"], "scramjet.all.js")),
+            stat(resolve(routes["/scramjet/"], "scramjet.wasm.wasm")),
+            stat(resolve(routes["/baremux/"], "index.js")),
+            stat(resolve(routes["/epoxy/"], "index.mjs")),
+          ]);
+          if (req.method === "HEAD") { res.writeHead(200, { "Cache-Control": "no-store" }); return res.end(); }
+          return json(res, 200, { status: "ok", service: "slipstream" });
+        } catch {
+          return json(res, 503, { error: "Browser engine files are missing. Run npm ci before starting the server." });
+        }
+      }
       if (url.pathname === "/api/ai") {
         if (req.method !== "POST")
           return json(res, 405, { error: "Use POST." });
@@ -195,7 +210,7 @@ export function createSlipstreamServer() {
 if (process.argv[1] === fileURLToPath(import.meta.url))
   createSlipstreamServer().listen(
     Number(process.env.PORT) || 5186,
-    process.env.HOST || "127.0.0.1",
+    process.env.HOST || (process.env.NODE_ENV === "production" ? "0.0.0.0" : "127.0.0.1"),
     () =>
       console.log(
         "Slipstream preview: http://localhost:" + (process.env.PORT || 5186),
