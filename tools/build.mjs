@@ -1,4 +1,4 @@
-import { readdir, readFile, cp, mkdir, rm, access } from "node:fs/promises";
+import { readdir, readFile, writeFile, cp, mkdir, rm, access } from "node:fs/promises";
 import { spawnSync } from "node:child_process";
 import { resolve, dirname } from "node:path";
 for (const directory of ["js", "tools", "tests", "api", "."]) {
@@ -38,6 +38,12 @@ for (const entry of [
   "game-pictures",
 ])
   await cp(entry, "dist/" + entry, { recursive: true });
+if (process.env.WISP_URL) {
+  const wispURL = new URL(process.env.WISP_URL);
+  if (wispURL.protocol !== 'wss:' || wispURL.username || wispURL.password || wispURL.hash)
+    throw new Error('WISP_URL must be a secure WebSocket URL without credentials or a fragment.');
+  await writeFile('dist/js/proxy-config.js', 'window.SlipstreamProxyConfig = ' + JSON.stringify({ wispURL: wispURL.href }) + ';\n');
+}
 for (const [name, path] of Object.entries({
   scramjet: "scramjet",
   baremux: "bare-mux",

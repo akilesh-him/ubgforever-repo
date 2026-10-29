@@ -178,10 +178,13 @@ export function createSlipstreamServer() {
   server.on("upgrade", (req, socket, head) => {
     try {
       if (
-        req.url === "/wisp/" &&
+        ["/wisp", "/wisp/"].includes(new URL(req.url, "http://localhost").pathname) &&
         allowedOrigin(req.headers.origin, req.headers.host, publicOrigins)
       )
+      {
+        req.url = "/wisp/";
         wisp.routeRequest(req, socket, head);
+      }
       else socket.destroy();
     } catch {
       socket.destroy();

@@ -13,3 +13,7 @@ After deployment, verify `/api/ai` returns JSON (GET should return 405), `/wisp/
 The AI rate limiter is per function instance and socket address, not a distributed per-user quota. Configure shared authenticated rate limits for a busy public deployment.
 
 References: [Vercel WebSockets](https://vercel.com/docs/functions/websockets), [project configuration](https://vercel.com/docs/project-configuration/vercel-json).
+
+Wisp uses `/wisp` without a trailing slash so Vercel cannot redirect the WebSocket handshake before upgrading it. The Node server accepts both slash forms and normalizes them to the Wisp protocol path internally.
+
+If your host cannot run Wisp, set build-time `WISP_URL` to your own backend's secure WebSocket URL, for example `wss://origin.example.com/wisp`, then rebuild/redeploy. This URL is public configuration, not a secret. Configure that backend's `PUBLIC_ORIGINS` to accept your frontend origin. Do not put a normal HTTPS page URL there. The browser now checks for a Wisp handshake before opening a frame and displays a connection error if the backend is missing.

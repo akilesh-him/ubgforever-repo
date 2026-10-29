@@ -17,6 +17,27 @@
     });
   }
 
+  function checkWisp(url) {
+    return new Promise(function (resolve, reject) {
+      var socket = new WebSocket(url);
+      var timer = setTimeout(function () { finish(new Error("The browsing server did not respond. Check the Wisp backend and WebSocket routing.")); }, 10000);
+      function finish(error) {
+        clearTimeout(timer);
+        socket.onmessage = socket.onerror = socket.onclose = null;
+        socket.close();
+        if (error) reject(error);
+        else resolve();
+      }
+      socket.onmessage = function (event) {
+        if (typeof event.data === "string") finish(new Error("The browsing endpoint returned an invalid Wisp handshake."));
+        else finish();
+      };
+      socket.onerror = socket.onclose = function () {
+        finish(new Error("Could not connect to the browsing server. The host must route WebSocket requests to Wisp."));
+      };
+    });
+  }
+
   async function initialize() {
     if (ready) return ready;
     ready = (async function () {
@@ -68,13 +89,13 @@
           changed();
         });
       }
+      var wispURL = window.SlipstreamProxyConfig?.wispURL ||
+        (location.protocol === "https:" ? "wss://" : "ws://") + location.host + "/wisp";
+      await checkWisp(wispURL);
       var connection = new BareMux.BareMuxConnection("/baremux/worker.js");
       await connection.setTransport("/js/transport.mjs", [
         {
-          wisp:
-            (location.protocol === "https:" ? "wss://" : "ws://") +
-            location.host +
-            "/wisp/",
+          wisp: wispURL,
         },
       ]);
     })().catch(function (error) {

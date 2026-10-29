@@ -28,3 +28,29 @@ test('Vercel adapter preserves Wisp upgrade handling', () => {
   assert.equal(req.url, '/wisp/');
   assert.equal(destroyed, true);
 });
+
+test('Wisp completes binary handshakes without relying on a trailing slash', async t => {
+  const { default: WebSocket } = await import('ws');
+  const { createSlipstreamServer } = await import('../server.mjs');
+  for (const adapter of [false, true]) {
+    const server = adapter ? createVercelServer('/wisp/') : createSlipstreamServer();
+    server.listen(0, '127.0.0.1');
+    await once(server, 'listening');
+    t.after(() => new Promise(resolve => server.close(resolve)));
+    for (const path of ['/wisp', '/wisp/', '/wisp?session=test']) {
+      const socket = new WebSocket('ws://127.0.0.1:' + server.address().port + path);
+      const timer = setTimeout(() => socket.terminate(), 3000);
+      try {
+        const [data, binary] = await once(socket, 'message');
+        assert.equal(binary, true);
+        assert.equal(data[0], 3);
+        assert.equal(data.readUInt32LE(1), 0);
+      } finally {
+        clearTimeout(timer);
+        const closed = once(socket, 'close');
+        socket.close();
+        await closed;
+      }
+    }
+  }
+});

@@ -141,6 +141,15 @@ test("proxy initialization is shared without mounting either interface", async (
     }
   }
   const context = {
+    setTimeout,
+    clearTimeout,
+    WebSocket: class {
+      constructor(url) {
+        assert.equal(url, "ws://localhost/wisp");
+        queueMicrotask(() => this.onmessage({ data: new ArrayBuffer(9) }));
+      }
+      close() {}
+    },
     window: {
       $scramjetLoadController: () => ({ ScramjetController: Controller }),
       BareMux: {},
