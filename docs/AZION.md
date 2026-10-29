@@ -18,7 +18,7 @@ Put your HTTPS reverse proxy in front of port 8080. The container does not provi
 Set these on the origin, never in public frontend files:
 
 ```dotenv
-GROQ_API_KEY=your-server-only-key
+CLOUDFLARE_API_TOKEN=your-server-only-key
 PUBLIC_ORIGINS=https://your-public-domain.example
 ```
 

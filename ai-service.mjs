@@ -1,5 +1,4 @@
 import { aiPolicy } from "./js/ai-policy.mjs";
-const endpoint = "https://api.groq.com/openai/v1/chat/completions";
 export const model = aiPolicy.model;
 const tools = ["web_search", "wikipedia"].map((name) => ({
   type: "function",
@@ -113,7 +112,7 @@ export function validateMessages(input) {
             /^data:image\/(png|jpeg|webp);base64,([A-Za-z0-9+/]+={0,2})$/.exec(
               part.image_url.url,
             );
-          if (++images > aiPolicy.maxImages) throw new Error("Groq supports up to 3 images per conversation. Start a new chat to send more.");
+          if (++images > aiPolicy.maxImages) throw new Error("This chat supports up to 3 images per conversation. Start a new chat to send more.");
           if (
             match &&
             Buffer.from(match[2], "base64").length <= aiPolicy.maxFileBytes
@@ -136,7 +135,10 @@ export function validateMessages(input) {
     return { role: message.role, content };
   });
 }
-export async function answer(input, apiKey, signal) {
+export async function answer(input, apiKey, signal, accountId = process.env.CLOUDFLARE_ACCOUNT_ID) {
+  if (!/^[a-f0-9]{32}$/i.test(accountId || ""))
+    throw new Error("Set a valid CLOUDFLARE_ACCOUNT_ID on the server to enable Workers AI.");
+  const endpoint = "https://api.cloudflare.com/client/v4/accounts/" + accountId + "/ai/v1/chat/completions";
   const messages = [
     {
       role: "system",
@@ -159,17 +161,19 @@ export async function answer(input, apiKey, signal) {
         messages,
         tools,
         tool_choice: round === 3 ? "none" : "auto",
-        max_completion_tokens: 2500,
+        max_tokens: 1500,
       }),
     });
     if (!response.ok)
       throw new Error(
         response.status === 401
           ? "The AI service key was rejected."
+          : response.status === 429
+            ? "Workers AI reached a usage or rate limit. Please retry later. No paid fallback was attempted."
           : response.status === 402
-            ? "Groq is unavailable for this account. Please check the account limits."
+            ? "Workers AI requires billing for this request. No paid fallback was attempted."
             : response.status === 404
-              ? "The configured Groq model is unavailable. Please check model access."
+              ? "The configured Workers AI model is unavailable. Please check account access."
               : "The AI provider is unavailable (" +
                 response.status +
                 "). Please retry.",

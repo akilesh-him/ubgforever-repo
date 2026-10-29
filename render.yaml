@@ -15,5 +15,7 @@ services:
         value: 0.0.0.0
       - key: PUBLIC_ORIGINS
         value: https://slipstream-fr.duckdns.org
-      - key: GROQ_API_KEY
+      - key: CLOUDFLARE_API_TOKEN
+        sync: false
+      - key: CLOUDFLARE_ACCOUNT_ID
         sync: false

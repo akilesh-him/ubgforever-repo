@@ -5,9 +5,11 @@ import { createSlipstreamServer } from "../server.mjs";
 
 test("AI preserves multibyte characters split across request chunks", async () => {
   const previousFetch = globalThis.fetch;
-  const previousKey = process.env.GROQ_API_KEY;
+  const previousKey = process.env.CLOUDFLARE_API_TOKEN;
+  const previousAccount = process.env.CLOUDFLARE_ACCOUNT_ID;
+  process.env.CLOUDFLARE_ACCOUNT_ID = "0123456789abcdef0123456789abcdef";
   let received;
-  process.env.GROQ_API_KEY = "local-test-key";
+  process.env.CLOUDFLARE_API_TOKEN = "local-test-key";
   globalThis.fetch = async (_, options) => {
     received = JSON.parse(options.body).messages.at(-1).content;
     return Response.json({
@@ -50,8 +52,10 @@ test("AI preserves multibyte characters split across request chunks", async () =
     assert.equal(received, message);
   } finally {
     globalThis.fetch = previousFetch;
-    if (previousKey === undefined) delete process.env.GROQ_API_KEY;
-    else process.env.GROQ_API_KEY = previousKey;
+    if (previousAccount === undefined) delete process.env.CLOUDFLARE_ACCOUNT_ID;
+    else process.env.CLOUDFLARE_ACCOUNT_ID = previousAccount;
+    if (previousKey === undefined) delete process.env.CLOUDFLARE_API_TOKEN;
+    else process.env.CLOUDFLARE_API_TOKEN = previousKey;
     await new Promise((resolve) => server.close(resolve));
   }
 });

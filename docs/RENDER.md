@@ -8,7 +8,7 @@ The checked-in `render.yaml` provisions a Node 22 web service. In Render, create
 - Start command: `npm start`
 - Environment: `NODE_ENV=production`, `HOST=0.0.0.0`
 - Health check: `/healthz`
-- Server-only environment variable: `GROQ_API_KEY` for AI
+- Server-only environment variable: `CLOUDFLARE_API_TOKEN` for AI
 - `PUBLIC_ORIGINS=https://slipstream-fr.duckdns.org` if a CDN forwards a different Host header
 
 Use Render's provided `PORT`. Do not set `HOST=127.0.0.1` on the hosted service. The free service can sleep when idle, so the first request can take longer. No paid plan is selected in the Blueprint.

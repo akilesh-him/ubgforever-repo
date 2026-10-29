@@ -4,8 +4,8 @@ import { readFile } from "node:fs/promises";
 import vm from "node:vm";
 import { createSlipstreamServer } from "../server.mjs";
 import { validateMessages, answer, model } from "../ai-service.mjs";
-test("AI uses the Groq vision and tool model", () => {
-  assert.equal(model, "qwen/qwen3.8-27b");
+test("AI uses the selected Workers AI vision and tool model", () => {
+  assert.equal(model, "@cf/google/gemma-4-26b-a4b-it");
 });
 test("AI rejects injected roles, oversized content, and excess history", () => {
   assert.throws(() =>
@@ -30,7 +30,7 @@ test("AI forwards trusted tool results and returns sources with requested model"
       return Response.json({
         query: { search: [{ title: "Glass", snippet: "A material" }] },
       });
-    assert.equal(url, "https://api.groq.com/openai/v1/chat/completions");
+    assert.equal(url, "https://api.cloudflare.com/client/v4/accounts/0123456789abcdef0123456789abcdef/ai/v1/chat/completions");
     const body = JSON.parse(options.body);
     assert.equal(body.model, model);
     assert.equal(options.headers.Authorization, "Bearer test-only");
@@ -66,6 +66,8 @@ test("AI forwards trusted tool results and returns sources with requested model"
     const result = await answer(
       [{ role: "user", content: "What is glass?" }],
       "test-only",
+      undefined,
+      "0123456789abcdef0123456789abcdef",
     );
     assert.equal(result.content, "Glass is a material.");
     assert.equal(result.sources[0].url, "https://en.wikipedia.org/wiki/Glass");
@@ -78,8 +80,8 @@ test("AI handles provider credit errors without exposing credentials", async () 
   globalThis.fetch = async () => new Response("", { status: 402 });
   try {
     await assert.rejects(
-      () => answer([{ role: "user", content: "Hi" }], "secret-test"),
-      /Groq is unavailable/,
+      () => answer([{ role: "user", content: "Hi" }], "secret-test", undefined, "0123456789abcdef0123456789abcdef"),
+      /No paid fallback/,
     );
   } finally {
     globalThis.fetch = original;
@@ -362,11 +364,34 @@ test("AI accepts image attachments at 512 KiB and rejects oversized or remote im
   );
 });
 
-test('Groq image limits count images across the conversation', () => {
+test('Chat image limits count images across the conversation', () => {
   const image = { type: 'image_url', image_url: { url: 'data:image/png;base64,aGVsbG8=' } };
   assert.throws(() => validateMessages([
     { role: 'user', content: [image, image] },
     { role: 'assistant', content: 'response' },
     { role: 'user', content: [image, image] },
   ]), /up to 3 images/);
+});
+
+test('Workers AI rejects missing account configuration before sending credentials', async () => {
+  const original = globalThis.fetch;
+  globalThis.fetch = () => { throw new Error('Unexpected upstream request'); };
+  try {
+    await assert.rejects(() => answer([{ role: 'user', content: 'Hi' }], 'secret-test', undefined, ''), /CLOUDFLARE_ACCOUNT_ID/);
+    await assert.rejects(() => answer([{ role: 'user', content: 'Hi' }], 'secret-test', undefined, '../other'), /CLOUDFLARE_ACCOUNT_ID/);
+  } finally {
+    globalThis.fetch = original;
+  }
+});
+
+test('Workers AI stops on usage limits without retrying a paid fallback', async () => {
+  const original = globalThis.fetch;
+  let requests = 0;
+  globalThis.fetch = async () => { requests++; return new Response('', { status: 429 }); };
+  try {
+    await assert.rejects(() => answer([{ role: 'user', content: 'Hi' }], 'secret-test', undefined, '0123456789abcdef0123456789abcdef'), /No paid fallback/);
+    assert.equal(requests, 1);
+  } finally {
+    globalThis.fetch = original;
+  }
 });

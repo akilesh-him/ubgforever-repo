@@ -89,7 +89,7 @@ export function createSlipstreamServer() {
           !allowedOrigin(req.headers.origin, req.headers.host, publicOrigins)
         )
           return json(res, 403, { error: "Origin not allowed." });
-        if (!process.env.GROQ_API_KEY)
+        if ((!process.env.CLOUDFLARE_API_TOKEN || !/^[a-f0-9]{32}$/i.test(process.env.CLOUDFLARE_ACCOUNT_ID || "")))
           return json(res, 503, {
             error: "AI is not configured on this server.",
           });
@@ -129,7 +129,7 @@ export function createSlipstreamServer() {
             200,
             await answer(
               messages,
-              process.env.GROQ_API_KEY,
+              process.env.CLOUDFLARE_API_TOKEN,
               AbortSignal.timeout(120000),
             ),
           );

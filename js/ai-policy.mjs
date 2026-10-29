@@ -1,5 +1,5 @@
 export const aiPolicy = Object.freeze({
-  model: "qwen/qwen3.8-27b",
+  model: "@cf/google/gemma-4-26b-a4b-it",
   maxFiles: 4,
   maxImages: 3,
   maxFileBytes: 512 * 1024,

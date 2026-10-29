@@ -2,7 +2,7 @@
 
 Import the repository as an Other framework project using Node 22. The checked-in `vercel.json` runs `npm run build`, serves `dist/`, and routes game proxy and Wisp requests to Node functions. `/api/ai` is a native function route. Do not add a catch-all rewrite to `index.html`: it returns HTML to API clients and breaks the browser transport.
 
-Set `GROQ_API_KEY` in Vercel environment variables for the desired environments, then redeploy. Never expose the key in a public variable. Leave `PUBLIC_ORIGINS` empty for normal same-origin deployments. If another CDN changes the forwarded Host, add the exact public HTTPS origin there.
+Set `CLOUDFLARE_API_TOKEN` in Vercel environment variables for the desired environments, then redeploy. Never expose the key in a public variable. Leave `PUBLIC_ORIGINS` empty for normal same-origin deployments. If another CDN changes the forwarded Host, add the exact public HTTPS origin there.
 
 Enable Fluid compute in project settings for WebSocket support. The Wisp function exports the existing HTTP server and its upgrade listener. WebSocket connections end at the function duration limit, so long browser sessions can require reconnecting. The configured duration is 300 seconds. This differs from the long-running Node origin recommended for Azion.
 
