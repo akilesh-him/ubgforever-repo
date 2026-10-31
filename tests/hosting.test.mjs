@@ -28,3 +28,21 @@ test('hosted Node service serves browser engine assets with executable MIME type
     if (type === 'application/wasm') assert.deepEqual([...bytes.slice(0, 4)], [0, 97, 115, 109]);
   }
 });
+
+test('checked-in engine assets match installed locked dependencies', async () => {
+  const { readFile } = await import('node:fs/promises');
+  for (const [target, source] of [
+    ['scramjet/scramjet.all.js', 'scramjet/dist/scramjet.all.js'],
+    ['scramjet/scramjet.sync.js', 'scramjet/dist/scramjet.sync.js'],
+    ['scramjet/scramjet.wasm.wasm', 'scramjet/dist/scramjet.wasm.wasm'],
+    ['baremux/index.js', 'bare-mux/dist/index.js'],
+    ['baremux/worker.js', 'bare-mux/dist/worker.js'],
+    ['epoxy/index.mjs', 'epoxy-transport/dist/index.mjs'],
+  ]) {
+    const [checkedIn, installed] = await Promise.all([
+      readFile(new URL('../' + target, import.meta.url)),
+      readFile(new URL('../node_modules/@mercuryworkshop/' + source, import.meta.url)),
+    ]);
+    assert.deepEqual(checkedIn, installed, target + ' differs from package-lock.json');
+  }
+});

@@ -100,3 +100,5 @@ For UI changes also review desktop and a narrow phone layout. Exercise failure/r
 ## Contribution style
 
 Use readable multiline source and descriptive ownership. Default to no comments. Keep only short lowercase explanations of a non-obvious constraint or workaround, without semicolons or em dashes. Preserve original/vendor comments and attribution. Avoid generic emoji icons, decorative slogans, fake statistics and arbitrary gradients. A handoff must describe current behavior, not ask the next developer to reconstruct previous implementations.
+
+Browser engine assets in `scramjet/`, `baremux/` and `epoxy/` are checked in so static deployments that publish the repository root can load them. Their versions match `package-lock.json`. After updating the Mercury Workshop packages, run `npm run sync:proxy-assets` and commit the generated files. Scramjet and BareMux licenses are included in their folders. Epoxy Transport is AGPL-3.0-only; its source is available at https://github.com/MercuryWorkshop/epoxy-transport. The default Wisp endpoint is in `js/proxy-config.js`. The build-time `WISP_URL` variable overrides it for `dist/`.

@@ -7,7 +7,8 @@
     "dev": "node --env-file-if-exists=.env server.mjs",
     "build": "node tools/build.mjs",
     "test": "node --test tests/*.test.mjs",
-    "config:azion": "node tools/configure-azion.mjs"
+    "config:azion": "node tools/configure-azion.mjs",
+    "sync:proxy-assets": "node tools/sync-proxy-assets.mjs"
   },
   "dependencies": {
     "@mercuryworkshop/bare-mux": "2.1.9",
