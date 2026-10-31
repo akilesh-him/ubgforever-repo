@@ -1,11 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { once } from 'node:events';
-import { createServer } from 'node:http';
+import { createServer, Server } from 'node:http';
 import { createVercelServer } from '../vercel-server.mjs';
+import rootServer from '../server.mjs';
 import aiHandler from '../api/ai.mjs';
 import gameProxyHandler from '../api/game-proxy.mjs';
-import wispHandler from '../api/wisp.mjs';
+import wispServer from '../api/wisp.mjs';
 import { readAIResponse } from '../js/ai-response.mjs';
 
 test('AI rejects HTML responses with deployment guidance', async () => {
@@ -24,8 +25,13 @@ test('Vercel adapter routes rewritten game requests and preserves query paramete
   assert.deepEqual(await response.json(), { error: 'Unknown game destination.' });
 });
 
+test('Vercel root and Wisp entry points export HTTP servers', () => {
+  assert.ok(rootServer instanceof Server);
+  assert.ok(wispServer instanceof Server);
+});
+
 test('Vercel API entry points export callable request handlers', () => {
-  for (const handler of [aiHandler, gameProxyHandler, wispHandler])
+  for (const handler of [aiHandler, gameProxyHandler])
     assert.equal(typeof handler, 'function');
 });
 

@@ -207,8 +207,11 @@ export function createSlipstreamServer() {
   });
   return server;
 }
+const server = createSlipstreamServer();
+export default server;
+
 if (process.argv[1] === fileURLToPath(import.meta.url))
-  createSlipstreamServer().listen(
+  server.listen(
     Number(process.env.PORT) || 5186,
     process.env.HOST || (process.env.NODE_ENV === "production" ? "0.0.0.0" : "127.0.0.1"),
     () =>
