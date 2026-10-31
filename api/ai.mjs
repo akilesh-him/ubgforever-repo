@@ -1,2 +1,2 @@
-import { createVercelServer } from '../vercel-server.mjs';
-export default createVercelServer('/api/ai');
+import { createVercelHandler } from '../vercel-server.mjs';
+export default createVercelHandler('/api/ai');

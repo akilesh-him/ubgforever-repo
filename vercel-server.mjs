@@ -10,3 +10,12 @@ export function createVercelServer(pathname) {
   server.prependListener('upgrade', route);
   return server;
 }
+
+export function createVercelHandler(pathname) {
+  const server = createSlipstreamServer();
+  return (req, res) => {
+    const url = new URL(req.url, 'http://localhost');
+    req.url = pathname + url.search;
+    server.emit('request', req, res);
+  };
+}

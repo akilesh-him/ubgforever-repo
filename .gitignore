@@ -49,6 +49,7 @@ Thumbs.db
 *.wmv
 
 
+.env.example
 .env
 .env.*
 !.env.example

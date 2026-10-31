@@ -1,7 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { once } from 'node:events';
+import { createServer } from 'node:http';
 import { createVercelServer } from '../vercel-server.mjs';
+import aiHandler from '../api/ai.mjs';
+import gameProxyHandler from '../api/game-proxy.mjs';
+import wispHandler from '../api/wisp.mjs';
 import { readAIResponse } from '../js/ai-response.mjs';
 
 test('AI rejects HTML responses with deployment guidance', async () => {
@@ -12,6 +16,21 @@ test('AI rejects HTML responses with deployment guidance', async () => {
 
 test('Vercel adapter routes rewritten game requests and preserves query parameters', async t => {
   const server = createVercelServer('/game-proxy');
+  server.listen(0, '127.0.0.1');
+  await once(server, 'listening');
+  t.after(() => new Promise(resolve => server.close(resolve)));
+  const response = await fetch('http://127.0.0.1:' + server.address().port + '/api/game-proxy?provider=missing&file=missing');
+  assert.equal(response.status, 400);
+  assert.deepEqual(await response.json(), { error: 'Unknown game destination.' });
+});
+
+test('Vercel API entry points export callable request handlers', () => {
+  for (const handler of [aiHandler, gameProxyHandler, wispHandler])
+    assert.equal(typeof handler, 'function');
+});
+
+test('Vercel request handler dispatches rewritten requests', async t => {
+  const server = createServer(gameProxyHandler);
   server.listen(0, '127.0.0.1');
   await once(server, 'listening');
   t.after(() => new Promise(resolve => server.close(resolve)));
