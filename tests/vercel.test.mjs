@@ -7,6 +7,7 @@ import rootServer from '../server.mjs';
 import aiHandler from '../api/ai.mjs';
 import gameProxyHandler from '../api/game-proxy.mjs';
 import wispServer from '../api/wisp.mjs';
+import vercelConfig from '../vercel.json' with { type: 'json' };
 import { readAIResponse } from '../js/ai-response.mjs';
 
 test('AI rejects HTML responses with deployment guidance', async () => {
@@ -28,6 +29,11 @@ test('Vercel adapter routes rewritten game requests and preserves query paramete
 test('Vercel root and Wisp entry points export HTTP servers', () => {
   assert.ok(rootServer instanceof Server);
   assert.ok(wispServer instanceof Server);
+});
+
+test('Vercel serves the static build without framework detection', () => {
+  assert.equal(vercelConfig.framework, null);
+  assert.equal(vercelConfig.outputDirectory, 'dist');
 });
 
 test('Vercel API entry points export callable request handlers', () => {
